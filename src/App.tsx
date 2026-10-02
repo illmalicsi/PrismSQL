@@ -32,6 +32,7 @@ import { SaveQueryModal } from './components/Modals/SaveQueryModal'
 import { ShortcutsModal } from './components/Modals/ShortcutsModal'
 import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
 import { BuyMeCoffeeModal } from './components/Modals/BuyMeCoffeeModal'
+import { DocsPage } from './components/Docs/DocsPage'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee } from 'lucide-react'
@@ -79,6 +80,35 @@ export function AppContent() {
   const [customDatabases, setCustomDatabases] = useState<CustomDatabase[]>(() => getStoredCustomDatabases())
   const [schemas, setSchemas] = useState<TableSchema[]>([])
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isDocsView, setIsDocsView] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    return params.get('view') === 'docs' || window.location.hash === '#docs'
+  })
+
+  // Handle URL navigation & popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      setIsDocsView(params.get('view') === 'docs' || window.location.hash === '#docs')
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // Check if query was passed in URL params (e.g. from docs "Run in Studio")
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const q = params.get('query')
+      if (q && q.trim()) {
+        setTabs([{ id: 'tab-1', title: 'Query 1', query: q.trim() }])
+        setActiveTabId('tab-1')
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
 
   // Editor Tabs
   const [tabs, setTabs] = useState<EditorTab[]>([
@@ -519,6 +549,23 @@ ORDER BY average_salary DESC;`
           </button>
         </div>
       </div>
+    )
+  }
+
+  if (isDocsView) {
+    return (
+      <DocsPage
+        onBackToStudio={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setIsDocsView(false)
+        }}
+        onSelectQuery={(sql) => {
+          setTabs([{ id: 'tab-1', title: 'Query 1', query: sql }])
+          setActiveTabId('tab-1')
+          window.history.pushState({}, '', window.location.pathname)
+          setIsDocsView(false)
+        }}
+      />
     )
   }
 

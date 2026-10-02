@@ -15,6 +15,7 @@ import {
   Trash2,
   PanelLeft,
   Coffee,
+  BookOpen,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
@@ -513,6 +514,18 @@ export const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </div>
+
+        {/* SQL Documentation (Opens in New Tab) */}
+        <a
+          href="?view=docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="SQL Documentation & All Queries (Opens in new tab)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+          <span className="hidden sm:inline font-medium">Docs</span>
+        </a>
 
         {/* Buy Me a Coffee (Built-in Modal) */}
         <button

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Play, Search, Code, BookOpen } from 'lucide-react'
+import { Play, Search, Code, BookOpen, ExternalLink } from 'lucide-react'
 import { QUERY_TEMPLATES } from '../../data/queryTemplates'
 
 interface QueryLibraryProps {
@@ -42,6 +42,21 @@ export const QueryLibrary: React.FC<QueryLibraryProps> = ({
     <div className="flex flex-col h-full text-xs bg-white dark:bg-[#0c0e14]">
       {/* Search & Level Filter */}
       <div className="p-2 border-b border-slate-200 dark:border-slate-800/80 space-y-2">
+        {/* Full Docs Link */}
+        <a
+          href="?view=docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open complete SQL documentation in a new tab"
+          className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200/80 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all font-medium text-[11px] group"
+        >
+          <span className="flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span className="font-semibold">Complete SQL Docs & All Queries</span>
+          </span>
+          <ExternalLink className="w-3 h-3 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+        </a>
+
         <div className="relative">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
