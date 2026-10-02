@@ -87,7 +87,8 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
     os: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Windows') ? 'Windows' : navigator.userAgent.includes('Mac') ? 'macOS' : navigator.userAgent.includes('Linux') ? 'Linux' : 'Other') : 'Unknown OS',
     screen: typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight} (Screen ${window.screen.width}x${window.screen.height})` : 'Unknown',
     engine: 'SQLite WASM (In-Browser Execution)',
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    appUrl: 'https://prismsql.vercel.app/',
+    url: typeof window !== 'undefined' ? window.location.href : 'https://prismsql.vercel.app/',
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,7 +116,7 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
 
     // Direct background submission without opening Gmail or external email apps
     try {
-      await fetch('https://formsubmit.co/ajax/illmalicsi@addu.edu.ph', {
+      await fetch('https://formsubmit.co/ajax/ivanlouiemalicsi@gmail.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,6 +124,7 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
         },
         body: JSON.stringify({
           _subject: `[PrismSQL Feedback] [${newReport.ticketId}] [${newReport.type.toUpperCase()}] ${newReport.title}`,
+          app: 'PrismSQL (https://prismsql.vercel.app/)',
           ticketId: newReport.ticketId,
           type: newReport.type,
           severity: newReport.severity,

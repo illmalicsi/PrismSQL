@@ -1,6 +1,8 @@
-# ⚡ SQL Playground
+# 💎 PrismSQL Studio
 
-A high-performance in-browser SQL playground powered by WebAssembly SQLite (`sql.js`), React 19, TypeScript, Tailwind CSS, and CodeMirror 6. 
+🌐 **Live Application**: [https://prismsql.vercel.app/](https://prismsql.vercel.app/)
+
+A high-performance in-browser SQL studio powered by WebAssembly SQLite (`sql.js`), React 19, TypeScript, Tailwind CSS, and CodeMirror 6. Developed by **Ivan Louie Malicsi**.
 
 No backend or database setup required — 100% client-side, zero latency, offline capable, and completely private.
 
