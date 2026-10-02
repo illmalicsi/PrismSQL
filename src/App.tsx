@@ -30,6 +30,7 @@ import { TableDetailsModal } from './components/Modals/TableDetailsModal'
 import { SaveQueryModal } from './components/Modals/SaveQueryModal'
 import { ShortcutsModal } from './components/Modals/ShortcutsModal'
 import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
+import { BuyMeCoffeeModal } from './components/Modals/BuyMeCoffeeModal'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee } from 'lucide-react'
@@ -96,6 +97,7 @@ export function AppContent() {
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
   const [saveModalOpen, setSaveModalOpen] = useState(false)
   const [createDbModalOpen, setCreateDbModalOpen] = useState(false)
+  const [coffeeModalOpen, setCoffeeModalOpen] = useState(false)
   const [inspectedTable, setInspectedTable] = useState<TableSchema | null>(null)
 
   // History & Saved Queries (Local Storage)
@@ -532,6 +534,7 @@ ORDER BY average_salary DESC;`
         onSelectTemplate={(sql) => handleSelectTemplate(sql, false)}
         onOpenCreateDbModal={() => setCreateDbModalOpen(true)}
         onDeleteCustomDb={handleDeleteCustomDb}
+        onOpenCoffeeModal={() => setCoffeeModalOpen(true)}
       />
 
       {/* Main Workspace Body */}
@@ -646,16 +649,14 @@ ORDER BY average_salary DESC;`
         </div>
 
         <div className="flex items-center gap-2 text-[10px]">
-          <a
-            href="https://buymeacoffee.com/ivanlouiemq"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Support on Buy Me a Coffee"
-            className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline transition-colors font-medium"
+          <button
+            onClick={() => setCoffeeModalOpen(true)}
+            title="Support on Buy Me a Coffee (Built-in)"
+            className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline transition-colors font-medium cursor-pointer"
           >
             <Coffee className="w-3 h-3 text-amber-500 fill-amber-500/20" />
             <span>Buy me a coffee</span>
-          </a>
+          </button>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>© {new Date().getFullYear()}</span>
           <span className="font-semibold text-slate-700 dark:text-slate-200">Ivan Louie Malicsi</span>
@@ -689,6 +690,10 @@ ORDER BY average_salary DESC;`
         isOpen={createDbModalOpen}
         onClose={() => setCreateDbModalOpen(false)}
         onCreate={handleCreateDatabase}
+      />
+      <BuyMeCoffeeModal
+        isOpen={coffeeModalOpen}
+        onClose={() => setCoffeeModalOpen(false)}
       />
     </div>
   )
