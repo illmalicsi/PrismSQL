@@ -13,6 +13,7 @@ import {
   FileCode,
   Lightbulb,
   Bug,
+  Swords,
 } from 'lucide-react'
 import { SQL_DOCUMENTATION, DOC_CATEGORIES } from '../../data/sqlDocs'
 import { useTheme } from '../../context/ThemeContext'
@@ -123,6 +124,17 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
               className="w-full bg-slate-100 dark:bg-[#141724] border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
+
+          <a
+            href="?view=arena"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="SQL Skill Tests & Challenges (Opens in new tab)"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors shadow-xs no-underline"
+          >
+            <Swords className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden sm:inline">Challenges</span>
+          </a>
 
           <a
             href="?view=feedback"

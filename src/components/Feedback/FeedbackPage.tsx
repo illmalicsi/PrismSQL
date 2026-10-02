@@ -20,6 +20,7 @@ import {
   FileCode,
   Lightbulb,
   BookOpen,
+  Swords,
 } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { PrismLogo, PrismBrandText } from '../PrismLogo'
@@ -772,6 +773,18 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                       <span>View GitHub Repository</span>
                     </span>
                     <span className="text-[10px] text-slate-400 group-hover:underline">Issues</span>
+                  </a>
+                  <a
+                    href="?view=arena"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 group"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Swords className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Take SQL Skill Challenges</span>
+                    </span>
+                    <span className="text-[10px] text-amber-500/70 group-hover:underline">Arena</span>
                   </a>
                   <a
                     href="?view=docs"

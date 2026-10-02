@@ -17,6 +17,7 @@ import {
   Coffee,
   BookOpen,
   Bug,
+  Swords,
   MoreVertical,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
@@ -520,6 +521,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Vertical Divider */}
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
+          {/* SQL Challenges & Skill Arena (Opens in New Tab) */}
+          <a
+            href="?view=arena"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="SQL Skill Tests & Challenges (Opens in new tab)"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors shadow-xs no-underline group"
+          >
+            <Swords className="w-3.5 h-3.5 text-amber-500 shrink-0 group-hover:scale-110 transition-transform" />
+            <span>Challenges</span>
+          </a>
+
           {/* SQL Documentation (Opens in New Tab) */}
           <a
             href="?view=docs"
@@ -654,6 +667,16 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     Resources & Help
                   </div>
+                  <a
+                    href="?view=arena"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-amber-600 dark:text-amber-400 font-semibold no-underline"
+                  >
+                    <Swords className="w-4 h-4 text-amber-500" />
+                    <span>SQL Challenges & Arena</span>
+                  </a>
                   <a
                     href="?view=docs"
                     target="_blank"

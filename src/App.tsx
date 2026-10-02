@@ -34,6 +34,7 @@ import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
 import { BuyMeCoffeeModal } from './components/Modals/BuyMeCoffeeModal'
 import { DocsPage } from './components/Docs/DocsPage'
 import { FeedbackPage } from './components/Feedback/FeedbackPage'
+import { ChallengesPage } from './components/Challenges/ChallengesPage'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo, PrismBrandText } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee, Code2, Table2, Columns } from 'lucide-react'
@@ -99,6 +100,20 @@ export function AppContent() {
       window.location.hash === '#bugs'
     )
   })
+  const [isChallengesView, setIsChallengesView] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    const view = params.get('view')
+    return (
+      view === 'arena' ||
+      view === 'challenges' ||
+      view === 'challenge' ||
+      view === 'tests' ||
+      window.location.hash === '#arena' ||
+      window.location.hash === '#challenges' ||
+      window.location.hash === '#tests'
+    )
+  })
 
   // Handle URL navigation & popstate
   useEffect(() => {
@@ -113,6 +128,15 @@ export function AppContent() {
         window.location.hash === '#feedback' ||
         window.location.hash === '#report' ||
         window.location.hash === '#bugs'
+      )
+      setIsChallengesView(
+        view === 'arena' ||
+        view === 'challenges' ||
+        view === 'challenge' ||
+        view === 'tests' ||
+        window.location.hash === '#arena' ||
+        window.location.hash === '#challenges' ||
+        window.location.hash === '#tests'
       )
     }
     window.addEventListener('popstate', handlePopState)
@@ -670,6 +694,23 @@ ORDER BY average_salary DESC;`
         onBackToStudio={() => {
           window.history.pushState({}, '', window.location.pathname)
           setIsFeedbackView(false)
+        }}
+      />
+    )
+  }
+
+  if (isChallengesView) {
+    return (
+      <ChallengesPage
+        onBackToStudio={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setIsChallengesView(false)
+        }}
+        onOpenInStudio={(sql) => {
+          setTabs([{ id: 'tab-1', title: 'Query 1', query: sql }])
+          setActiveTabId('tab-1')
+          window.history.pushState({}, '', window.location.pathname)
+          setIsChallengesView(false)
         }}
       />
     )
