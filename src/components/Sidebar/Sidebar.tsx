@@ -259,6 +259,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
           )}
         </div>
+
+        {/* Sidebar Bottom Footer: Copyright */}
+        <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-800/80 bg-slate-100/50 dark:bg-[#090a0f] text-[10px] text-slate-400 dark:text-slate-500 flex items-center justify-between shrink-0">
+          <div className="truncate">
+            © {new Date().getFullYear()} <span className="font-medium text-slate-600 dark:text-slate-300">Ivan Louie Malicsi</span>
+          </div>
+          <span className="text-[9px] text-slate-400 dark:text-slate-600 shrink-0">PrismSQL</span>
+        </div>
       </aside>
     </>
   )

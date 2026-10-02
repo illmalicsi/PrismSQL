@@ -632,6 +632,27 @@ ORDER BY average_salary DESC;`
         </div>
       </div>
 
+      {/* Bottom Status & Copyright Bar */}
+      <footer className="h-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] px-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0 select-none z-20">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-mono text-slate-600 dark:text-slate-300">SQLite WASM</span>
+          </span>
+          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+            In-Browser SQL Studio
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-[10px]">
+          <span>© {new Date().getFullYear()}</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-200">Ivan Louie Malicsi</span>
+          <span className="text-slate-300 dark:text-slate-700 hidden xs:inline">•</span>
+          <span className="text-slate-400 dark:text-slate-500 hidden xs:inline">All rights reserved</span>
+        </div>
+      </footer>
+
       {/* Modals */}
       <CsvImportModal
         isOpen={csvModalOpen}
