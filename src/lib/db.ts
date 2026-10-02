@@ -108,6 +108,14 @@ export function saveActiveCustomDbState(): void {
   if (currentDatasetId === 'default' || currentDatasetId === 'blank') {
     try {
       const dump = exportSqlDump()
+      // Never re-save legacy boilerplate
+      if (
+        dump.includes('Alex Morgan') ||
+        dump.includes('Sam Rivera') ||
+        dump.includes('alex@example.com')
+      ) {
+        return
+      }
       localStorage.setItem('sqlplayground_default_db_sql', dump)
     } catch (e) {
       console.warn('Failed to auto-save default database state:', e)
@@ -140,12 +148,37 @@ export async function initDatabase(datasetId = 'default', customName?: string): 
 
   if (datasetId === 'default' || datasetId === 'blank') {
     currentDbName = 'My Database'
+
+    // One-time cleanup for any legacy boilerplate auto-created 'users' table
+    const migrationFlag = 'sqlplayground_cleaned_boilerplate_users_v4'
+    if (!localStorage.getItem(migrationFlag)) {
+      localStorage.setItem(migrationFlag, 'true')
+      const legacySaved = localStorage.getItem('sqlplayground_default_db_sql')
+      if (
+        legacySaved &&
+        (legacySaved.includes('Alex Morgan') ||
+          legacySaved.includes('Sam Rivera') ||
+          legacySaved.includes('alex@example.com') ||
+          legacySaved.includes('"users"'))
+      ) {
+        localStorage.removeItem('sqlplayground_default_db_sql')
+      }
+    }
+
     const savedDefaultSql = localStorage.getItem('sqlplayground_default_db_sql')
     if (savedDefaultSql && savedDefaultSql.trim()) {
-      try {
-        db.exec(savedDefaultSql)
-      } catch (e) {
-        console.warn('Error loading saved default DB:', e)
+      if (
+        savedDefaultSql.includes('Alex Morgan') ||
+        savedDefaultSql.includes('Sam Rivera') ||
+        savedDefaultSql.includes('alex@example.com')
+      ) {
+        localStorage.removeItem('sqlplayground_default_db_sql')
+      } else {
+        try {
+          db.exec(savedDefaultSql)
+        } catch (e) {
+          console.warn('Error loading saved default DB:', e)
+        }
       }
     }
   } else {

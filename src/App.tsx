@@ -37,6 +37,27 @@ import { Loader2, AlertCircle, Coffee } from 'lucide-react'
 
 const DEFAULT_QUERY = ''
 
+// Clean up any legacy boilerplate users table from previous runs
+try {
+  const legacyFlag = 'sqlplayground_cleaned_boilerplate_users_v4'
+  if (!localStorage.getItem(legacyFlag)) {
+    localStorage.setItem(legacyFlag, 'true')
+    const rawSql = localStorage.getItem('sqlplayground_default_db_sql')
+    if (
+      rawSql &&
+      (rawSql.includes('Alex Morgan') ||
+        rawSql.includes('Sam Rivera') ||
+        rawSql.includes('alex@example.com') ||
+        rawSql.includes('"users"') ||
+        rawSql.includes('users'))
+    ) {
+      localStorage.removeItem('sqlplayground_default_db_sql')
+    }
+  }
+} catch (e) {
+  console.warn(e)
+}
+
 export function AppContent() {
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
