@@ -20,6 +20,7 @@ import {
   deleteCustomDatabaseFromStorage,
   getCurrentDbName,
 } from './lib/db'
+import { parseSqlError } from './lib/sqlErrorParser'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { EditorToolbar } from './components/Editor/EditorToolbar'
@@ -217,6 +218,7 @@ export function AppContent() {
         rowCount: res.values.length,
         status: res.error ? 'error' : 'success',
         error: res.error,
+        errorDetails: res.errorDetails,
       }
       setHistory((prev) => [historyItem, ...prev.slice(0, 49)])
 
@@ -225,6 +227,8 @@ export function AppContent() {
         setActiveView('table')
       }
     } catch (err: any) {
+      const errMessage = err?.message || String(err)
+      const errorDetails = parseSqlError(activeTab.query, errMessage)
       setResult({
         columns: [],
         values: [],
@@ -232,7 +236,8 @@ export function AppContent() {
         rowsAffected: 0,
         query: activeTab.query,
         timestamp: Date.now(),
-        error: err?.message || String(err),
+        error: errMessage,
+        errorDetails,
       })
     } finally {
       setIsRunning(false)
@@ -603,6 +608,7 @@ ORDER BY average_salary DESC;`
                   onRunQuery={handleRunQuery}
                   onFormatSql={handleFormatSql}
                   schemas={schemas}
+                  errorDetails={result?.errorDetails}
                 />
               </div>
             </div>

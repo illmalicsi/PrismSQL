@@ -2,6 +2,7 @@ import type { Database, SqlJsStatic } from 'sql.js'
 import Papa from 'papaparse'
 import type { QueryResult, TableSchema, TableColumn, ForeignKey, CustomDatabase } from '../types/sql'
 import { DATASETS } from '../data/datasets'
+import { parseSqlError } from './sqlErrorParser'
 
 declare global {
   interface Window {
@@ -453,24 +454,7 @@ export function executeQuery(rawSql: string): QueryResult {
   } catch (err: any) {
     const elapsed = Math.round((performance.now() - startTime) * 100) / 100
     const errMessage = err?.message || String(err)
-
-    // Educational helpful tip if user wrote unrecognized SQLite DDL
-    if (errMessage.includes('near "DATABASE"') || errMessage.includes('syntax error')) {
-      return {
-        columns: ['Error', 'SQLite Tip'],
-        values: [
-          [
-            errMessage,
-            '💡 In SQLite, the entire active workspace is your database! You can directly run: CREATE TABLE my_table (id INTEGER PRIMARY KEY, ...); or click "+ Create Database" in the top bar.',
-          ],
-        ],
-        executionTimeMs: elapsed,
-        rowsAffected: 0,
-        query: trimmed,
-        timestamp: Date.now(),
-        error: errMessage,
-      }
-    }
+    const errorDetails = parseSqlError(trimmed, errMessage)
 
     return {
       columns: [],
@@ -480,6 +464,7 @@ export function executeQuery(rawSql: string): QueryResult {
       query: trimmed,
       timestamp: Date.now(),
       error: errMessage,
+      errorDetails,
     }
   }
 }

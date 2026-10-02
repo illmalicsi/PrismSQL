@@ -2,7 +2,8 @@ import React, { useMemo } from 'react'
 import CodeMirror, { Prec } from '@uiw/react-codemirror'
 import { sql, SQLite } from '@codemirror/lang-sql'
 import { keymap } from '@codemirror/view'
-import type { TableSchema } from '../../types/sql'
+import { linter, type Diagnostic } from '@codemirror/lint'
+import type { TableSchema, SqlErrorDetails } from '../../types/sql'
 import { useTheme } from '../../context/ThemeContext'
 import { getEditorThemeExtensions } from './editorThemes'
 
@@ -12,6 +13,7 @@ interface SqlEditorProps {
   onRunQuery: () => void
   onFormatSql: () => void
   schemas: TableSchema[]
+  errorDetails?: SqlErrorDetails | null
 }
 
 export const SqlEditor: React.FC<SqlEditorProps> = ({
@@ -20,6 +22,7 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
   onRunQuery,
   onFormatSql,
   schemas,
+  errorDetails,
 }) => {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -59,6 +62,39 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
     return getEditorThemeExtensions(isDark)
   }, [isDark])
 
+  const linterExtension = useMemo(() => {
+    return linter((view) => {
+      if (!errorDetails || !errorDetails.line) return []
+      const doc = view.state.doc
+      const targetLine = Math.min(Math.max(1, errorDetails.line), doc.lines)
+      const lineObj = doc.line(targetLine)
+      let from = lineObj.from
+      let to = lineObj.to
+
+      if (errorDetails.token) {
+        const text = lineObj.text
+        const idx = text.toLowerCase().indexOf(errorDetails.token.toLowerCase())
+        if (idx !== -1) {
+          from = lineObj.from + idx
+          to = from + errorDetails.token.length
+        }
+      }
+
+      if (from === to && to < doc.length) {
+        to = from + 1
+      }
+
+      const diag: Diagnostic = {
+        from,
+        to: Math.max(to, from + 1),
+        severity: 'error',
+        message: `Line ${errorDetails.line}: ${errorDetails.cause}\n💡 ${errorDetails.suggestion}`,
+      }
+
+      return [diag]
+    })
+  }, [errorDetails])
+
   const extensions = useMemo(() => {
     return [
       sql({
@@ -68,8 +104,9 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
       }),
       customKeymaps,
       ...themeExtensions,
+      linterExtension,
     ]
-  }, [schemaMap, customKeymaps, themeExtensions])
+  }, [schemaMap, customKeymaps, themeExtensions, linterExtension])
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-white dark:bg-[#0c0e14] text-slate-900 dark:text-slate-100 flex flex-col">

@@ -9,6 +9,8 @@ import {
   Maximize2,
   Minimize2,
   AlertTriangle,
+  AlertCircle,
+  Lightbulb,
   Clock,
   Database,
   Layers,
@@ -18,12 +20,68 @@ import type { QueryResult } from '../../types/sql'
 import { DataTable } from './DataTable'
 import { DataVisualizer } from './DataVisualizer'
 import { ExplainView } from './ExplainView'
+import { parseSqlError } from '../../lib/sqlErrorParser'
 import {
   exportResultToCsv,
   exportResultToJson,
   formatResultAsMarkdown,
   formatResultAsInserts,
 } from '../../lib/exportUtils'
+
+function renderCodeContext(query: string, errorLine: number, errorToken: string | null) {
+  const lines = query.split(/\r?\n/)
+  if (lines.length === 0) return null
+
+  const startLine = Math.max(1, errorLine - 2)
+  const endLine = Math.min(lines.length, errorLine + 2)
+  const displayedLines = []
+
+  for (let l = startLine; l <= endLine; l++) {
+    const isError = l === errorLine
+    const lineText = lines[l - 1] || ''
+
+    let highlightedContent: React.ReactNode = lineText
+    if (isError && errorToken && lineText.toLowerCase().includes(errorToken.toLowerCase())) {
+      const idx = lineText.toLowerCase().indexOf(errorToken.toLowerCase())
+      const before = lineText.substring(0, idx)
+      const match = lineText.substring(idx, idx + errorToken.length)
+      const after = lineText.substring(idx + errorToken.length)
+      highlightedContent = (
+        <>
+          {before}
+          <span className="bg-rose-500/30 text-rose-300 font-bold px-1 rounded underline decoration-rose-400 decoration-wavy">
+            {match}
+          </span>
+          {after}
+        </>
+      )
+    }
+
+    displayedLines.push(
+      <div
+        key={l}
+        className={`flex items-start gap-3 px-2 py-1 rounded font-mono text-[12px] leading-relaxed ${
+          isError
+            ? 'bg-rose-950/60 text-rose-100 border-l-2 border-rose-500 font-semibold'
+            : 'text-slate-400 opacity-80'
+        }`}
+      >
+        <span
+          className={`select-none shrink-0 w-8 text-right font-mono ${
+            isError ? 'text-rose-400 font-bold' : 'text-slate-500'
+          }`}
+        >
+          {isError ? `➜ ${l}` : l}
+        </span>
+        <span className="select-text whitespace-pre overflow-x-auto">
+          {highlightedContent || <span className="opacity-40">(empty line)</span>}
+        </span>
+      </div>
+    )
+  }
+
+  return <div className="space-y-0.5">{displayedLines}</div>
+}
 
 interface ResultsContainerProps {
   result: QueryResult | null
@@ -228,20 +286,113 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
       <div className="flex-1 min-h-0 relative overflow-hidden bg-white dark:bg-[#0c0e14]">
         {/* Error Display */}
         {result?.error ? (
-          <div className="p-6 h-full flex flex-col items-center justify-center select-text">
-            <div className="max-w-xl w-full p-4 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300">
-              <div className="flex items-center gap-2 font-semibold text-rose-700 dark:text-rose-400 mb-1.5">
-                <AlertTriangle className="w-4 h-4" />
-                <span>SQL Execution Error</span>
+          (() => {
+            const details =
+              result.errorDetails ||
+              parseSqlError(result.query || originalQuery, result.error)
+
+            return (
+              <div className="p-3 sm:p-6 h-full flex flex-col items-center justify-start overflow-y-auto select-text">
+                <div className="max-w-2xl w-full my-auto flex flex-col gap-3.5 rounded-xl bg-white dark:bg-[#12141e] border border-rose-200 dark:border-rose-900/60 shadow-xl p-4 sm:p-5 text-xs animate-in fade-in duration-150">
+                  {/* Header: Title + Badges */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-100 dark:border-rose-950/60 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                          SQL Execution Error
+                        </h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Query execution stopped by SQLite engine
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Line Number Badge */}
+                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono font-bold text-xs shadow-xs">
+                        <span>Line {details.line}</span>
+                        {details.column > 1 && (
+                          <span className="text-rose-400 dark:text-rose-400 font-normal">
+                            : Col {details.column}
+                          </span>
+                        )}
+                      </span>
+
+                      {/* Category Pill */}
+                      <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        {details.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* What is causing it (Root Cause) */}
+                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-900 dark:text-rose-200">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-xs block text-rose-800 dark:text-rose-300">
+                          What is causing it:
+                        </span>
+                        <p className="text-xs text-rose-900 dark:text-rose-100 font-medium mt-0.5 leading-relaxed">
+                          {details.cause}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Code Context Preview */}
+                  {(result.query || originalQuery) && (
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-100 overflow-hidden font-mono text-xs shadow-inner">
+                      <div className="px-3 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Code at Line {details.line}</span>
+                        {details.token && (
+                          <span className="text-rose-400">
+                            Flagged token:{' '}
+                            <code className="bg-rose-950 px-1.5 py-0.5 rounded text-rose-300 font-semibold">
+                              {details.token}
+                            </code>
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2.5 overflow-x-auto">
+                        {renderCodeContext(
+                          result.query || originalQuery,
+                          details.line,
+                          details.token
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actionable Suggestion */}
+                  <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-200">
+                    <div className="flex items-start gap-2.5">
+                      <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-xs block text-amber-800 dark:text-amber-300">
+                          How to fix:
+                        </span>
+                        <p className="text-[11px] text-amber-900 dark:text-amber-200 mt-0.5 leading-relaxed">
+                          {details.suggestion}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Technical Footer */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800/60 font-mono">
+                    <span className="truncate max-w-[80%]">
+                      SQLite: {result.error}
+                    </span>
+                    <span>{result.executionTimeMs}ms</span>
+                  </div>
+                </div>
               </div>
-              <div className="font-mono text-xs text-rose-900 dark:text-rose-200 bg-rose-100/60 dark:bg-rose-950/40 p-3 rounded-lg border border-rose-200 dark:border-rose-500/20 whitespace-pre-wrap">
-                {result.error}
-              </div>
-              <p className="mt-2 text-[11px] text-rose-600 dark:text-rose-400/80">
-                Check table names, column spelling, or syntax near the flagged statement.
-              </p>
-            </div>
-          </div>
+            )
+          })()
         ) : !result ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-neutral-500 text-xs">
             <Database className="w-8 h-8 mb-2 opacity-30 text-slate-400" />

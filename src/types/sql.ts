@@ -23,6 +23,18 @@ export interface TableSchema {
   sql: string
 }
 
+export interface SqlErrorDetails {
+  line: number
+  column: number
+  token: string | null
+  category: 'Syntax Error' | 'Schema Error' | 'Constraint Error' | 'Execution Error'
+  cause: string
+  suggestion: string
+  lineContent: string
+  fullLine: string
+  rawError: string
+}
+
 export interface QueryResult {
   columns: string[]
   values: any[][]
@@ -31,6 +43,7 @@ export interface QueryResult {
   query: string
   timestamp: number
   error?: string
+  errorDetails?: SqlErrorDetails
 }
 
 export interface ExplainRow {
@@ -56,6 +69,7 @@ export interface HistoryItem {
   rowCount: number
   status: 'success' | 'error'
   error?: string
+  errorDetails?: SqlErrorDetails
 }
 
 export interface SavedQuery {
