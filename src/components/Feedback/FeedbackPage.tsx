@@ -469,7 +469,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                     placeholder="Paste the relevant SQL statement or browser console error here..."
                     value={sqlOrError}
                     onChange={(e) => setSqlOrError(e.target.value)}
-                    className="w-full bg-[#090a0f] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-indigo-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed"
+                    className="w-full bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all font-mono leading-relaxed"
                   />
                 </div>
 

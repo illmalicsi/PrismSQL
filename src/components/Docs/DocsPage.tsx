@@ -312,11 +312,11 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
                   </p>
 
                   {/* Code Container */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-[#090a0f] text-slate-100 overflow-hidden font-mono text-xs shadow-inner relative">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090a0f] text-slate-800 dark:text-slate-100 overflow-hidden font-mono text-xs shadow-inner relative">
                     {/* Code Header Bar with Copy & Run */}
-                    <div className="px-3 py-1.5 bg-[#12141e] border-b border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="px-3 py-1.5 bg-slate-100 dark:bg-[#12141e] border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
                       <div className="flex items-center gap-1.5">
-                        <Terminal className="w-3.5 h-3.5 text-indigo-400" />
+                        <Terminal className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                         <span>SQL Example</span>
                       </div>
 
@@ -324,12 +324,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
                         <button
                           onClick={() => handleCopy(item.id, item.exampleSql)}
                           title="Copy SQL to clipboard"
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors text-[10px]"
+                          className="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent transition-colors text-[10px]"
                         >
                           {copiedId === item.id ? (
                             <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span className="text-emerald-400 font-medium">Copied!</span>
+                              <Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">Copied!</span>
                             </>
                           ) : (
                             <>
@@ -342,7 +342,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
                         <button
                           onClick={() => handleOpenInStudio(item.exampleSql)}
                           title="Run this query in SQL Studio"
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium transition-colors text-[10px]"
+                          className="flex items-center gap-1 px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors text-[10px] shadow-xs"
                         >
                           <ExternalLink className="w-3 h-3" />
                           <span>Run in Studio</span>
@@ -350,7 +350,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
                       </div>
                     </div>
 
-                    <pre className="p-3.5 overflow-x-auto text-[12px] leading-relaxed text-indigo-100">
+                    <pre className="p-3.5 overflow-x-auto text-[12px] leading-relaxed text-indigo-950 dark:text-indigo-100">
                       <code>{item.exampleSql}</code>
                     </pre>
                   </div>
