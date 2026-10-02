@@ -1,0 +1,359 @@
+import React, { useState, useRef } from 'react'
+import {
+  Database as DbIcon,
+  RotateCcw,
+  Upload,
+  Download,
+  Moon,
+  Sun,
+  Keyboard,
+  FileSpreadsheet,
+  FileCode,
+  Check,
+  ChevronDown,
+} from 'lucide-react'
+import { DATASETS } from '../data/datasets'
+import { useTheme } from '../context/ThemeContext'
+import { exportBinaryDb, exportSqlDump, importSqlDump, importBinaryDb } from '../lib/db'
+import { downloadBlob } from '../lib/exportUtils'
+
+interface HeaderProps {
+  currentDataset: string
+  onSelectDataset: (id: string) => void
+  onResetDb: () => void
+  onOpenCsvModal: () => void
+  onOpenShortcutsModal: () => void
+  onSelectTemplate: (sql: string) => void
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  currentDataset,
+  onSelectDataset,
+  onResetDb,
+  onOpenCsvModal,
+  onOpenShortcutsModal,
+}) => {
+  const { theme, toggleTheme } = useTheme()
+  const [datasetMenuOpen, setDatasetMenuOpen] = useState(false)
+  const [importMenuOpen, setImportMenuOpen] = useState(false)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+
+  const sqlFileInputRef = useRef<HTMLInputElement>(null)
+  const dbFileInputRef = useRef<HTMLInputElement>(null)
+
+  const activeDatasetObj = DATASETS.find((d) => d.id === currentDataset) || DATASETS[0]
+
+  const handleExportSqlite = () => {
+    try {
+      const data = exportBinaryDb()
+      const blob = new Blob([data.buffer as ArrayBuffer], { type: 'application/x-sqlite3' })
+      downloadBlob(blob, `${currentDataset || 'database'}_export.sqlite`)
+      setExportMenuOpen(false)
+    } catch (e: any) {
+      alert(`Export error: ${e?.message || e}`)
+    }
+  }
+
+  const handleExportDump = () => {
+    try {
+      const dump = exportSqlDump()
+      const blob = new Blob([dump], { type: 'text/plain;charset=utf-8' })
+      downloadBlob(blob, `${currentDataset || 'database'}_dump.sql`)
+      setExportMenuOpen(false)
+    } catch (e: any) {
+      alert(`Dump error: ${e?.message || e}`)
+    }
+  }
+
+  const handleSqlFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string
+        importSqlDump(content)
+        alert('SQL script executed and imported successfully!')
+      } catch (err: any) {
+        alert(`Error executing SQL file: ${err?.message || err}`)
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+    setImportMenuOpen(false)
+  }
+
+  const handleDbFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const buffer = await file.arrayBuffer()
+      await importBinaryDb(new Uint8Array(buffer))
+      alert(`Loaded SQLite database "${file.name}" successfully!`)
+    } catch (err: any) {
+      alert(`Error loading database file: ${err?.message || err}`)
+    }
+    e.target.value = ''
+    setImportMenuOpen(false)
+  }
+
+  const handleReset = () => {
+    if (confirm('Reset active database to original sample state? Any unsaved modifications will be reverted.')) {
+      setIsResetting(true)
+      onResetDb()
+      setTimeout(() => setIsResetting(false), 500)
+    }
+  }
+
+  return (
+    <header className="h-14 border-b border-neutral-800 bg-[#0d0e12] px-4 flex items-center justify-between text-xs select-none z-30 relative">
+      {/* Hidden file inputs */}
+      <input
+        type="file"
+        ref={sqlFileInputRef}
+        onChange={handleSqlFileChange}
+        accept=".sql"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={dbFileInputRef}
+        onChange={handleDbFileChange}
+        accept=".sqlite,.db,.sqlite3"
+        className="hidden"
+      />
+
+      {/* Brand & Status */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 font-semibold text-sm tracking-tight text-white">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-[1px] flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <div className="w-full h-full bg-[#0d0e12] rounded-[7px] flex items-center justify-center">
+              <DbIcon className="w-3.5 h-3.5 text-indigo-400" />
+            </div>
+          </div>
+          <span>
+            SQL<span className="text-indigo-400">Playground</span>
+          </span>
+        </div>
+
+        <div className="h-4 w-[1px] bg-neutral-800 hidden sm:block" />
+
+        {/* Engine status pill */}
+        <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-[11px] text-neutral-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>SQLite 3 (WASM)</span>
+        </div>
+      </div>
+
+      {/* Center Controls: Dataset Switcher */}
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <button
+            onClick={() => {
+              setDatasetMenuOpen(!datasetMenuOpen)
+              setImportMenuOpen(false)
+              setExportMenuOpen(false)
+            }}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-200 transition-colors"
+          >
+            <span className="text-neutral-400 text-[11px]">Dataset:</span>
+            <span className="font-medium text-white">{activeDatasetObj.name}</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              {activeDatasetObj.badge}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+          </button>
+
+          {datasetMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setDatasetMenuOpen(false)}
+              />
+              <div className="absolute left-0 mt-1.5 w-72 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 text-[11px] font-medium text-neutral-400 border-b border-neutral-800/80">
+                  Switch Active Database
+                </div>
+                {DATASETS.map((ds) => {
+                  const isSelected = ds.id === currentDataset
+                  return (
+                    <button
+                      key={ds.id}
+                      onClick={() => {
+                        onSelectDataset(ds.id)
+                        setDatasetMenuOpen(false)
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-neutral-800/60 transition-colors ${
+                        isSelected ? 'bg-indigo-500/10 text-white' : 'text-neutral-300'
+                      }`}
+                    >
+                      <div className="mt-0.5">
+                        {isSelected ? (
+                          <Check className="w-4 h-4 text-indigo-400" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-neutral-700" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-xs text-neutral-200">
+                            {ds.name}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">
+                            {ds.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-neutral-400 line-clamp-1 mt-0.5">
+                          {ds.description}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Reset Database Button */}
+        <button
+          onClick={handleReset}
+          disabled={isResetting}
+          title="Reset database to initial dataset"
+          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+        >
+          <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin text-indigo-400' : ''}`} />
+        </button>
+      </div>
+
+      {/* Right Controls: Import, Export, Shortcuts, Theme */}
+      <div className="flex items-center gap-1.5">
+        {/* Import Menu */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setImportMenuOpen(!importMenuOpen)
+              setExportMenuOpen(false)
+              setDatasetMenuOpen(false)
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 transition-colors"
+          >
+            <Upload className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="hidden sm:inline">Import</span>
+            <ChevronDown className="w-3 h-3 text-neutral-400" />
+          </button>
+
+          {importMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setImportMenuOpen(false)}
+              />
+              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1 z-50">
+                <button
+                  onClick={() => {
+                    setImportMenuOpen(false)
+                    onOpenCsvModal()
+                  }}
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <div className="font-medium">Import CSV</div>
+                    <div className="text-[10px] text-neutral-400">Auto-create table from CSV</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => sqlFileInputRef.current?.click()}
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                >
+                  <FileCode className="w-4 h-4 text-cyan-400" />
+                  <div>
+                    <div className="font-medium">Execute .SQL File</div>
+                    <div className="text-[10px] text-neutral-400">Run scripts and DDL</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => dbFileInputRef.current?.click()}
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                >
+                  <DbIcon className="w-4 h-4 text-indigo-400" />
+                  <div>
+                    <div className="font-medium">Load SQLite .db</div>
+                    <div className="text-[10px] text-neutral-400">Open custom SQLite file</div>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Export Menu */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setExportMenuOpen(!exportMenuOpen)
+              setImportMenuOpen(false)
+              setDatasetMenuOpen(false)
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="hidden sm:inline">Export</span>
+            <ChevronDown className="w-3 h-3 text-neutral-400" />
+          </button>
+
+          {exportMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setExportMenuOpen(false)}
+              />
+              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1 z-50">
+                <button
+                  onClick={handleExportSqlite}
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                >
+                  <DbIcon className="w-4 h-4 text-indigo-400" />
+                  <div>
+                    <div className="font-medium">SQLite Database (.sqlite)</div>
+                    <div className="text-[10px] text-neutral-400">Binary SQLite file</div>
+                  </div>
+                </button>
+                <button
+                  onClick={handleExportDump}
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                >
+                  <FileCode className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <div className="font-medium">SQL Dump Script (.sql)</div>
+                    <div className="text-[10px] text-neutral-400">DDL & INSERT statements</div>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Shortcuts Cheat Sheet */}
+        <button
+          onClick={onOpenShortcutsModal}
+          title="Keyboard shortcuts"
+          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme'}
+          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+      </div>
+    </header>
+  )
+}
