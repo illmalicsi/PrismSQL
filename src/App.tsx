@@ -32,7 +32,7 @@ import { ShortcutsModal } from './components/Modals/ShortcutsModal'
 import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, Coffee } from 'lucide-react'
 
 const DEFAULT_QUERY = `-- Welcome to PrismSQL Studio!
 -- Your database is clean and blank.
@@ -645,7 +645,18 @@ ORDER BY average_salary DESC;`
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[10px]">
+        <div className="flex items-center gap-2 text-[10px]">
+          <a
+            href="https://buymeacoffee.com/ivanlouiemq"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Support on Buy Me a Coffee"
+            className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline transition-colors font-medium"
+          >
+            <Coffee className="w-3 h-3 text-amber-500 fill-amber-500/20" />
+            <span>Buy me a coffee</span>
+          </a>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>© {new Date().getFullYear()}</span>
           <span className="font-semibold text-slate-700 dark:text-slate-200">Ivan Louie Malicsi</span>
           <span className="text-slate-300 dark:text-slate-700 hidden xs:inline">•</span>

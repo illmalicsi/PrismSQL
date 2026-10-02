@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   PanelLeft,
+  Coffee,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
@@ -510,6 +511,18 @@ export const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </div>
+
+        {/* Buy Me a Coffee */}
+        <a
+          href="https://buymeacoffee.com/ivanlouiemq"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Buy me a coffee"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 dark:border-amber-400/20 transition-all font-medium text-xs shadow-xs"
+        >
+          <Coffee className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 shrink-0" />
+          <span className="hidden sm:inline">Buy me a coffee</span>
+        </a>
 
         {/* Shortcuts Cheat Sheet */}
         <button
