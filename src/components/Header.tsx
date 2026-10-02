@@ -64,8 +64,19 @@ export const Header: React.FC<HeaderProps> = ({
   const activeDatasetObj = DATASETS.find((d) => d.id === currentDataset)
   const activeCustomDb = customDatabases.find((d) => d.id === currentDataset)
 
-  const displayDbName = currentDbName || activeCustomDb?.name || activeDatasetObj?.name || 'Active Database'
-  const displayDbBadge = activeCustomDb ? 'Custom' : activeDatasetObj?.badge || 'SQLite'
+  let displayDbName = currentDbName || 'My Database'
+  let displayDbBadge = 'Workspace'
+
+  if (activeCustomDb) {
+    displayDbName = activeCustomDb.name
+    displayDbBadge = 'Custom'
+  } else if (activeDatasetObj) {
+    displayDbName = activeDatasetObj.name
+    displayDbBadge = activeDatasetObj.badge
+  } else if (currentDataset === 'default' || currentDataset === 'blank') {
+    displayDbName = 'My Database'
+    displayDbBadge = 'Blank'
+  }
 
   const handleExportSqlite = () => {
     try {
@@ -235,6 +246,42 @@ export const Header: React.FC<HeaderProps> = ({
                   >
                     <Plus className="w-3 h-3" />
                     <span>Create Database</span>
+                  </button>
+                </div>
+
+                {/* Default Workspace Database */}
+                <div className="py-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <button
+                    onClick={() => {
+                      onSelectDataset('default')
+                      setDatasetMenuOpen(false)
+                    }}
+                    className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/60 transition-colors cursor-pointer ${
+                      currentDataset === 'default'
+                        ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-white font-medium'
+                        : 'text-slate-700 dark:text-neutral-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="shrink-0">
+                        {currentDataset === 'default' ? (
+                          <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-neutral-700" />
+                        )}
+                      </div>
+                      <div className="truncate">
+                        <span className="font-medium text-xs text-slate-900 dark:text-neutral-200">
+                          My Database
+                        </span>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                          Local blank workspace
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 font-medium shrink-0">
+                      Blank
+                    </span>
                   </button>
                 </div>
 

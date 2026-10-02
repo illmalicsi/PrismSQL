@@ -11,8 +11,8 @@ declare global {
 
 let SQL: SqlJsStatic | null = null
 let db: Database | null = null
-let currentDatasetId = 'ecommerce'
-let currentDbName = 'E-Commerce Store'
+let currentDatasetId = 'default'
+let currentDbName = 'My Database'
 
 type SchemaListener = (schema: TableSchema[]) => void
 const schemaListeners: Set<SchemaListener> = new Set()
@@ -105,6 +105,15 @@ export async function getSqlInstance(): Promise<SqlJsStatic> {
 
 export function saveActiveCustomDbState(): void {
   if (!db) return
+  if (currentDatasetId === 'default' || currentDatasetId === 'blank') {
+    try {
+      const dump = exportSqlDump()
+      localStorage.setItem('sqlplayground_default_db_sql', dump)
+    } catch (e) {
+      console.warn('Failed to auto-save default database state:', e)
+    }
+    return
+  }
   if (!currentDatasetId.startsWith('custom_')) return
   const customDbs = getStoredCustomDatabases()
   const found = customDbs.find((d) => d.id === currentDatasetId)
@@ -118,9 +127,9 @@ export function saveActiveCustomDbState(): void {
   }
 }
 
-export async function initDatabase(datasetId = 'ecommerce', customName?: string): Promise<void> {
+export async function initDatabase(datasetId = 'default', customName?: string): Promise<void> {
   const sql = await getSqlInstance()
-  if (db && currentDatasetId.startsWith('custom_')) {
+  if (db && (currentDatasetId.startsWith('custom_') || currentDatasetId === 'default')) {
     saveActiveCustomDbState()
   }
   if (db) {
@@ -129,28 +138,40 @@ export async function initDatabase(datasetId = 'ecommerce', customName?: string)
   db = new sql.Database()
   currentDatasetId = datasetId
 
-  // Check if standard preset dataset
-  const dataset = DATASETS.find((d) => d.id === datasetId)
-  if (dataset) {
-    currentDbName = dataset.name
-    if (dataset.sql) {
-      db.exec(dataset.sql)
+  if (datasetId === 'default' || datasetId === 'blank') {
+    currentDbName = 'My Database'
+    const savedDefaultSql = localStorage.getItem('sqlplayground_default_db_sql')
+    if (savedDefaultSql && savedDefaultSql.trim()) {
+      try {
+        db.exec(savedDefaultSql)
+      } catch (e) {
+        console.warn('Error loading saved default DB:', e)
+      }
     }
   } else {
-    // Check if user custom database
-    const customDbs = getStoredCustomDatabases()
-    const custom = customDbs.find((d) => d.id === datasetId)
-    if (custom) {
-      currentDbName = custom.name
-      if (custom.sql && custom.sql.trim()) {
-        try {
-          db.exec(custom.sql)
-        } catch (e) {
-          console.warn('Error loading custom db SQL:', e)
-        }
+    // Check if standard preset dataset
+    const dataset = DATASETS.find((d) => d.id === datasetId)
+    if (dataset) {
+      currentDbName = dataset.name
+      if (dataset.sql) {
+        db.exec(dataset.sql)
       }
     } else {
-      currentDbName = customName || 'Custom Database'
+      // Check if user custom database
+      const customDbs = getStoredCustomDatabases()
+      const custom = customDbs.find((d) => d.id === datasetId)
+      if (custom) {
+        currentDbName = custom.name
+        if (custom.sql && custom.sql.trim()) {
+          try {
+            db.exec(custom.sql)
+          } catch (e) {
+            console.warn('Error loading custom db SQL:', e)
+          }
+        }
+      } else {
+        currentDbName = customName || 'Custom Database'
+      }
     }
   }
 
@@ -164,9 +185,9 @@ export async function initDatabase(datasetId = 'ecommerce', customName?: string)
   notifyDbChange()
 }
 
-export async function createNewDatabase(name: string, initialSql?: string): Promise<string> {
+export async function createNewDatabase(name: string, initialSql = ''): Promise<string> {
   const sql = await getSqlInstance()
-  if (db && currentDatasetId.startsWith('custom_')) {
+  if (db && (currentDatasetId.startsWith('custom_') || currentDatasetId === 'default')) {
     saveActiveCustomDbState()
   }
   if (db) {
@@ -179,22 +200,8 @@ export async function createNewDatabase(name: string, initialSql?: string): Prom
   currentDatasetId = id
   currentDbName = cleanName
 
-  // If no initialSql provided or empty, create a starter table so the active database is never empty!
-  const defaultStarterSql = `CREATE TABLE items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    category TEXT DEFAULT 'General',
-    quantity INTEGER DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO items (name, category, quantity) VALUES
-('Sample Item A', 'Inventory', 10),
-('Sample Item B', 'Inventory', 25);
-`
-  const starterSql = initialSql !== undefined && initialSql !== '' ? initialSql : defaultStarterSql
-
-  if (starterSql.trim()) {
+  const starterSql = initialSql ? initialSql.trim() : ''
+  if (starterSql) {
     try {
       db.exec(starterSql)
     } catch (e) {

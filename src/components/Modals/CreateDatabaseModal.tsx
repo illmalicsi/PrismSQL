@@ -9,9 +9,15 @@ interface CreateDatabaseModalProps {
 
 const STARTER_TEMPLATES = [
   {
+    id: 'empty',
+    title: 'Blank Database (0 Tables)',
+    description: 'Completely blank canvas ready for your custom CREATE TABLE statements.',
+    sql: '',
+  },
+  {
     id: 'starter',
-    title: 'Starter Database (Recommended)',
-    description: 'Includes a sample items catalog table with sample data ready to query.',
+    title: 'Sample Catalog (Optional)',
+    description: 'Includes a sample items catalog table with seed data ready to query.',
     sql: `CREATE TABLE items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -30,7 +36,7 @@ INSERT INTO items (name, category, quantity, price) VALUES
   },
   {
     id: 'users',
-    title: 'User Accounts & Profiles',
+    title: 'User Accounts & Profiles (Optional)',
     description: 'Includes users, roles, and profiles schema with sample seed data.',
     sql: `CREATE TABLE roles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +60,7 @@ INSERT INTO users (role_id, username, email) VALUES
   },
   {
     id: 'tasks',
-    title: 'Project Tasks & Sprints',
+    title: 'Project Tasks & Sprints (Optional)',
     description: 'Task board with statuses, priorities, and assignments.',
     sql: `CREATE TABLE projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,12 +84,6 @@ INSERT INTO tasks (project_id, title, status, priority, due_date) VALUES
 (1, 'Polish Dark Mode UI', 'Todo', 'Medium', '2024-04-25');
 `,
   },
-  {
-    id: 'empty',
-    title: 'Empty Database (0 Tables)',
-    description: 'Completely blank canvas ready for your custom CREATE TABLE statements.',
-    sql: '',
-  },
 ]
 
 export const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
@@ -92,7 +92,7 @@ export const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
   onCreate,
 }) => {
   const [dbName, setDbName] = useState('')
-  const [selectedTemplate, setSelectedTemplate] = useState('starter')
+  const [selectedTemplate, setSelectedTemplate] = useState('empty')
 
   if (!isOpen) return null
 
@@ -103,7 +103,7 @@ export const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
     const tpl = STARTER_TEMPLATES.find((t) => t.id === selectedTemplate)
     onCreate(dbName.trim(), tpl?.sql)
     setDbName('')
-    setSelectedTemplate('starter')
+    setSelectedTemplate('empty')
     onClose()
   }
 
