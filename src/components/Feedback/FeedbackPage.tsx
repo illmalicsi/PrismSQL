@@ -42,6 +42,58 @@ export interface BugReport {
   }
   timestamp: string
   status: 'Submitted' | 'In Review' | 'Resolved'
+  githubIssueUrl?: string
+  githubIssueNumber?: number
+}
+
+const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fillRule="evenodd"
+      d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+      clipRule="evenodd"
+    />
+  </svg>
+)
+
+export function buildGitHubIssueUrl(report: {
+  title: string
+  description: string
+  type: string
+  severity: string
+  ticketId: string
+  sqlOrError?: string
+  email?: string
+  diagnostics?: any
+}) {
+  const repoUrl = 'https://github.com/illmalicsi/PrismSQL'
+  const labels = [report.type, `severity:${report.severity}`, 'in-app-feedback'].join(',')
+
+  const bodySections = [
+    `### 📋 Description\n${report.description}\n`,
+    `### 🏷️ Classification\n- **Issue Type**: \`${report.type.toUpperCase()}\`\n- **Severity**: \`${report.severity}\`\n- **Ticket Reference**: \`${report.ticketId}\`\n`,
+  ]
+
+  if (report.email) {
+    bodySections.push(`### 👤 Submitter\nContact: \`${report.email}\`\n`)
+  }
+
+  if (report.sqlOrError) {
+    bodySections.push(`### 💻 Problematic SQL / Error Trace\n\`\`\`sql\n${report.sqlOrError}\n\`\`\`\n`)
+  }
+
+  if (report.diagnostics) {
+    bodySections.push(
+      `### ⚙️ Environment Diagnostics\n- **OS**: ${report.diagnostics.os || 'Unknown'}\n- **Browser**: ${report.diagnostics.browser || 'Unknown'}\n- **Screen Resolution**: ${report.diagnostics.screen || 'Unknown'}\n- **Execution Engine**: ${report.diagnostics.engine || 'SQLite WASM'}\n- **App URL**: [https://prismsql.vercel.app/](https://prismsql.vercel.app/)\n`
+    )
+  }
+
+  bodySections.push(`---\n*Submitted from [PrismSQL Studio](https://prismsql.vercel.app/)*`)
+
+  const issueBody = bodySections.join('\n')
+  const issueTitle = `[${report.ticketId}] [${report.type.toUpperCase()}] ${report.title}`
+
+  return `${repoUrl}/issues/new?title=${encodeURIComponent(issueTitle)}&labels=${encodeURIComponent(labels)}&body=${encodeURIComponent(issueBody)}`
 }
 
 interface FeedbackPageProps {
@@ -62,6 +114,7 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
   const [email, setEmail] = useState('')
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true)
   const [showDiagnosticsDetail, setShowDiagnosticsDetail] = useState(false)
+  const [autoCreateGithub, setAutoCreateGithub] = useState(true)
 
   // Status & submission state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -100,6 +153,41 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
     const randomSuffix = Math.floor(1000 + Math.random() * 9000)
     const ticketId = `PRISM-${randomSuffix}`
 
+    let createdGithubIssueUrl: string | undefined
+    let createdGithubIssueNumber: number | undefined
+
+    // 1. If automatic GitHub issue is enabled, call Vercel Serverless Function /api/create-issue
+    if (autoCreateGithub) {
+      try {
+        const issueRes = await fetch('/api/create-issue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ticketId,
+            type: reportType,
+            severity,
+            title: title.trim(),
+            description: description.trim(),
+            sqlOrError: sqlOrError.trim() || undefined,
+            email: email.trim() || undefined,
+            diagnostics: includeDiagnostics ? diagnostics : undefined,
+          }),
+        })
+
+        if (issueRes.ok) {
+          const issueData = await issueRes.json()
+          if (issueData.created && issueData.issueUrl) {
+            createdGithubIssueUrl = issueData.issueUrl
+            createdGithubIssueNumber = issueData.issueNumber
+          }
+        }
+      } catch (err) {
+        console.warn('Auto GitHub issue API request skipped or unavailable:', err)
+      }
+    }
+
     const newReport: BugReport = {
       id: `report-${Date.now()}`,
       ticketId,
@@ -112,9 +200,11 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
       diagnostics,
       timestamp: new Date().toISOString(),
       status: 'Submitted',
+      githubIssueUrl: createdGithubIssueUrl,
+      githubIssueNumber: createdGithubIssueNumber,
     }
 
-    // Direct background submission without opening Gmail or external email apps
+    // 2. Direct background submission without opening Gmail or external email apps
     try {
       await fetch('https://formsubmit.co/ajax/ivanlouiemalicsi@gmail.com', {
         method: 'POST',
@@ -132,6 +222,7 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
           description: newReport.description,
           sqlOrError: newReport.sqlOrError || 'N/A',
           contactEmail: newReport.email || 'None provided (Anonymous in-app submission)',
+          githubIssue: createdGithubIssueUrl ? `Created automatically: ${createdGithubIssueUrl}` : 'Not created automatically (token unconfigured or prefill fallback)',
           diagnostics: includeDiagnostics ? JSON.stringify(newReport.diagnostics, null, 2) : 'Opted out',
           timestamp: newReport.timestamp,
         }),
@@ -280,6 +371,61 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
               </p>
             </div>
 
+            {/* Automatic GitHub Issue Alert or Fallback */}
+            {submittedTicket.githubIssueUrl ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <GithubIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>GitHub Issue #{submittedTicket.githubIssueNumber} Created!</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-mono">Live</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Automatically logged to <span className="font-mono">illmalicsi/PrismSQL</span>.
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={submittedTicket.githubIssueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto h-8 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-xs no-underline"
+                >
+                  <span>View GitHub Issue</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            ) : (
+              <div className="bg-slate-100 dark:bg-[#141724] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+                    <GithubIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">
+                      Publish to GitHub Issues
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Open a pre-filled issue with your report title, details, and environment info.
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={buildGitHubIssueUrl(submittedTicket)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto h-8 px-3.5 rounded-lg bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-xs no-underline cursor-pointer"
+                >
+                  <GithubIcon className="w-3.5 h-3.5" />
+                  <span>Open in GitHub (1-Click)</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            )}
+
             {/* Ticket Summary Box */}
             <div className="bg-slate-50 dark:bg-[#141724] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 text-left text-xs space-y-2 font-mono">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
@@ -294,6 +440,20 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                 <span className="text-slate-500 dark:text-slate-400 font-sans">Severity:</span>
                 <span className="capitalize text-slate-800 dark:text-slate-200">{submittedTicket.severity}</span>
               </div>
+              {submittedTicket.githubIssueUrl && (
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400 font-sans">GitHub Issue:</span>
+                  <a
+                    href={submittedTicket.githubIssueUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>#{submittedTicket.githubIssueNumber}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400 font-sans">Status:</span>
                 <span className="text-emerald-500 font-semibold flex items-center gap-1">
@@ -330,7 +490,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
             </div>
 
             <div className="pt-2 text-[11px] text-slate-400">
-              Optional: You can also track and open issues on{' '}
+              Optional: You can also track and browse all issues on{' '}
               <a
                 href="https://github.com/illmalicsi/PrismSQL/issues"
                 target="_blank"
@@ -494,62 +654,102 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                   </p>
                 </div>
 
-                {/* 7. Environment Auto-Diagnostics */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300 font-medium">
-                      <input
-                        type="checkbox"
-                        checked={includeDiagnostics}
-                        onChange={(e) => setIncludeDiagnostics(e.target.checked)}
-                        className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span>Include anonymous browser & OS info to help diagnose</span>
-                    </label>
+                  {/* 7. Environment Auto-Diagnostics */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300 font-medium">
+                        <input
+                          type="checkbox"
+                          checked={includeDiagnostics}
+                          onChange={(e) => setIncludeDiagnostics(e.target.checked)}
+                          className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span>Include anonymous browser & OS info to help diagnose</span>
+                      </label>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowDiagnosticsDetail(!showDiagnosticsDetail)}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-                    >
-                      <Info className="w-3 h-3" />
-                      <span>{showDiagnosticsDetail ? 'Hide' : 'View'} info</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowDiagnosticsDetail(!showDiagnosticsDetail)}
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                      >
+                        <Info className="w-3 h-3" />
+                        <span>{showDiagnosticsDetail ? 'Hide' : 'View'} info</span>
+                      </button>
+                    </div>
+
+                    {showDiagnosticsDetail && (
+                      <div className="p-3 bg-slate-100 dark:bg-[#141724] rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-600 dark:text-slate-400 space-y-1 animate-in fade-in duration-150">
+                        <div>OS: {diagnostics.os}</div>
+                        <div>Engine: {diagnostics.engine}</div>
+                        <div>Resolution: {diagnostics.screen}</div>
+                        <div>Browser: {diagnostics.browser}</div>
+                      </div>
+                    )}
+
+                    {/* Automatic GitHub Issue Option */}
+                    <div className="pt-1">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300 font-medium">
+                        <input
+                          type="checkbox"
+                          checked={autoCreateGithub}
+                          onChange={(e) => setAutoCreateGithub(e.target.checked)}
+                          className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <GithubIcon className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Automatically create issue on GitHub (<span className="font-mono text-[11px]">illmalicsi/PrismSQL</span>)</span>
+                        </div>
+                      </label>
+                    </div>
                   </div>
 
-                  {showDiagnosticsDetail && (
-                    <div className="mt-3 p-3 bg-slate-100 dark:bg-[#141724] rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-600 dark:text-slate-400 space-y-1 animate-in fade-in duration-150">
-                      <div>OS: {diagnostics.os}</div>
-                      <div>Engine: {diagnostics.engine}</div>
-                      <div>Resolution: {diagnostics.screen}</div>
-                      <div>Browser: {diagnostics.browser}</div>
-                    </div>
-                  )}
-                </div>
+                  {/* Submit Action Buttons */}
+                  <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !title.trim() || !description.trim()}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Submitting report...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Submit Bug Report</span>
+                        </>
+                      )}
+                    </button>
 
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !title.trim() || !description.trim()}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Submitting directly...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Submit Bug Report</span>
-                      </>
-                    )}
-                  </button>
+                    <a
+                      href={
+                        title.trim() && description.trim()
+                          ? buildGitHubIssueUrl({
+                              title: title.trim(),
+                              description: description.trim(),
+                              type: reportType,
+                              severity,
+                              ticketId: 'DRAFT',
+                              sqlOrError: sqlOrError.trim() || undefined,
+                              email: email.trim() || undefined,
+                              diagnostics: includeDiagnostics ? diagnostics : undefined,
+                            })
+                          : 'https://github.com/illmalicsi/PrismSQL/issues/new'
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all no-underline cursor-pointer"
+                    >
+                      <GithubIcon className="w-4 h-4 text-slate-500" />
+                      <span>Open Pre-filled GitHub Issue</span>
+                      <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                    </a>
+                  </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-                    ✓ Submits directly in-app. Does not launch your mail client or Gmail.
+                    ✓ Submits directly in-app without opening mail client. Creates a GitHub issue when configured.
                   </p>
-                </div>
               </form>
             </div>
 
@@ -633,11 +833,34 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                         <div className="font-semibold text-slate-900 dark:text-white truncate">
                           {rep.title}
                         </div>
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
                           <span className="capitalize">{rep.type}</span>
-                          <span className="text-emerald-500 font-medium flex items-center gap-0.5">
-                            <Check className="w-3 h-3" /> Submitted
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {rep.githubIssueUrl ? (
+                              <a
+                                href={rep.githubIssueUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline inline-flex items-center gap-0.5"
+                              >
+                                <span>Issue #{rep.githubIssueNumber || 'GH'}</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            ) : (
+                              <a
+                                href={buildGitHubIssueUrl(rep)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center gap-0.5"
+                              >
+                                <span>Open GH</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            <span className="text-emerald-500 font-medium flex items-center gap-0.5">
+                              <Check className="w-3 h-3" /> Sent
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
