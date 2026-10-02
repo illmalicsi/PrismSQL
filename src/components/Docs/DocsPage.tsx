@@ -83,7 +83,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
           {onBackToStudio ? (
             <button
               onClick={onBackToStudio}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors"
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Studio</span>
@@ -91,7 +91,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
           ) : (
             <a
               href="/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors"
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Open Studio</span>
@@ -129,21 +129,21 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
             target="_blank"
             rel="noopener noreferrer"
             title="Report a bug or feedback (Opens in new tab)"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
           >
-            <Bug className="w-3.5 h-3.5" />
+            <Bug className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
             <span className="hidden sm:inline">Report Bug</span>
           </a>
 
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme'}
-            className="p-2 rounded-lg text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-slate-200 dark:border-slate-800 transition-colors"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
           >
             {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
             ) : (
-              <Moon className="w-4 h-4 text-indigo-600" />
+              <Moon className="w-3.5 h-3.5 text-indigo-400" />
             )}
           </button>
         </div>
