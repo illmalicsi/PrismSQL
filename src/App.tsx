@@ -35,23 +35,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee } from 'lucide-react'
 
-const DEFAULT_QUERY = `-- Welcome to PrismSQL Studio!
--- Your database is clean and blank.
--- Run the query below to create your first table, or write your own:
-
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    role TEXT DEFAULT 'Member',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO users (name, email, role) VALUES
-('Alex Morgan', 'alex@example.com', 'Admin'),
-('Sam Rivera', 'sam@example.com', 'Editor');
-
-SELECT * FROM users;`
+const DEFAULT_QUERY = ''
 
 export function AppContent() {
   const [isInitializing, setIsInitializing] = useState(true)
@@ -274,9 +258,9 @@ export function AppContent() {
       let starterSql = ''
       const customDb = customDatabases.find((c) => c.id === datasetId)
       if (customDb) {
-        starterSql = customDb.sql || `-- Database: ${customDb.name}\n-- Ready for SQL queries\n`
+        starterSql = customDb.sql || ''
       } else if (datasetId === 'default' || datasetId === 'blank') {
-        starterSql = DEFAULT_QUERY
+        starterSql = ''
       } else if (datasetId === 'ecommerce') {
         starterSql = `SELECT 
     p.name AS product_name,
@@ -309,13 +293,13 @@ JOIN employees e ON d.id = e.department_id
 GROUP BY d.id, d.name
 ORDER BY average_salary DESC;`
       } else {
-        starterSql = 'SELECT * FROM sqlite_master;'
+        starterSql = ''
       }
 
       setTabs([{ id: 'tab-1', title: 'Query 1', query: starterSql }])
       setActiveTabId('tab-1')
 
-      if (newSchemas.length > 0) {
+      if (newSchemas.length > 0 && starterSql.trim()) {
         const res = executeQuery(starterSql)
         setResult(res)
       } else {
@@ -339,18 +323,16 @@ ORDER BY average_salary DESC;`
       const newSchemas = getSchema()
       setSchemas(newSchemas)
 
-      let initialTabSql = ''
       if (newSchemas.length > 0) {
         const firstTable = newSchemas[0].name
-        initialTabSql = `-- Active Database: ${name}\n-- Automatically previewing "${firstTable}"\nSELECT * FROM "${firstTable}" LIMIT 50;\n`
+        const initialTabSql = `SELECT * FROM "${firstTable}" LIMIT 50;\n`
         setTabs([{ id: 'tab-1', title: 'Query 1', query: initialTabSql }])
         setActiveTabId('tab-1')
-        const res = executeQuery(`SELECT * FROM "${firstTable}" LIMIT 50;`)
+        const res = executeQuery(initialTabSql)
         setResult(res)
         setActiveView('table')
       } else {
-        initialTabSql = `-- Active Database: ${name}\n-- Write and run CREATE TABLE to start adding tables:\n\nCREATE TABLE notes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    title TEXT NOT NULL,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);\n`
-        setTabs([{ id: 'tab-1', title: 'Query 1', query: initialTabSql }])
+        setTabs([{ id: 'tab-1', title: 'Query 1', query: '' }])
         setActiveTabId('tab-1')
         setResult(null)
       }
