@@ -1,8 +1,13 @@
-import initSqlJs from 'sql.js'
 import type { Database, SqlJsStatic } from 'sql.js'
 import Papa from 'papaparse'
 import type { QueryResult, TableSchema, TableColumn, ForeignKey } from '../types/sql'
 import { DATASETS } from '../data/datasets'
+
+declare global {
+  interface Window {
+    initSqlJs?: (config?: any) => Promise<SqlJsStatic>
+  }
+}
 
 let SQL: SqlJsStatic | null = null
 let db: Database | null = null
@@ -26,7 +31,36 @@ function notifySchemaChange() {
 
 export async function getSqlInstance(): Promise<SqlJsStatic> {
   if (SQL) return SQL
-  SQL = await initSqlJs({
+
+  if (typeof window !== 'undefined' && typeof window.initSqlJs === 'function') {
+    SQL = await window.initSqlJs({
+      locateFile: () => '/sql-wasm.wasm',
+    })
+    return SQL
+  }
+
+  // Fallback: dynamically load /sql-wasm.js if not yet present
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector('script[src="/sql-wasm.js"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () => reject(new Error('Failed to load /sql-wasm.js')))
+      // If it already loaded before listener
+      if (typeof window.initSqlJs === 'function') return resolve()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = '/sql-wasm.js'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load /sql-wasm.js'))
+    document.head.appendChild(script)
+  })
+
+  if (!window.initSqlJs) {
+    throw new Error('SQLite WASM failed to initialize (window.initSqlJs missing)')
+  }
+
+  SQL = await window.initSqlJs({
     locateFile: () => '/sql-wasm.wasm',
   })
   return SQL
