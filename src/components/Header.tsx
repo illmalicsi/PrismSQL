@@ -16,6 +16,7 @@ import {
   PanelLeft,
   Coffee,
   BookOpen,
+  Bug,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
@@ -525,6 +526,18 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <BookOpen className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
           <span className="hidden sm:inline font-medium">Docs</span>
+        </a>
+
+        {/* Report Bug / Feedback (Opens in New Tab) */}
+        <a
+          href="?view=feedback"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Report Bug / Feedback (Opens in new tab)"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 dark:border-rose-400/20 transition-all font-medium text-xs shadow-xs"
+        >
+          <Bug className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+          <span className="hidden md:inline">Report Bug</span>
         </a>
 
         {/* Buy Me a Coffee (Built-in Modal) */}

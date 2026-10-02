@@ -12,6 +12,7 @@ import {
   Terminal,
   FileCode,
   Lightbulb,
+  Bug,
 } from 'lucide-react'
 import { SQL_DOCUMENTATION, DOC_CATEGORIES } from '../../data/sqlDocs'
 import { useTheme } from '../../context/ThemeContext'
@@ -122,6 +123,17 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
               className="w-full bg-slate-100 dark:bg-[#141724] border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
+
+          <a
+            href="?view=feedback"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Report a bug or feedback (Opens in new tab)"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors"
+          >
+            <Bug className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Report Bug</span>
+          </a>
 
           <button
             onClick={toggleTheme}

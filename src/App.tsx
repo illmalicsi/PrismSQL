@@ -33,6 +33,7 @@ import { ShortcutsModal } from './components/Modals/ShortcutsModal'
 import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
 import { BuyMeCoffeeModal } from './components/Modals/BuyMeCoffeeModal'
 import { DocsPage } from './components/Docs/DocsPage'
+import { FeedbackPage } from './components/Feedback/FeedbackPage'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee } from 'lucide-react'
@@ -85,12 +86,34 @@ export function AppContent() {
     const params = new URLSearchParams(window.location.search)
     return params.get('view') === 'docs' || window.location.hash === '#docs'
   })
+  const [isFeedbackView, setIsFeedbackView] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    const view = params.get('view')
+    return (
+      view === 'feedback' ||
+      view === 'report' ||
+      view === 'bugs' ||
+      window.location.hash === '#feedback' ||
+      window.location.hash === '#report' ||
+      window.location.hash === '#bugs'
+    )
+  })
 
   // Handle URL navigation & popstate
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search)
-      setIsDocsView(params.get('view') === 'docs' || window.location.hash === '#docs')
+      const view = params.get('view')
+      setIsDocsView(view === 'docs' || window.location.hash === '#docs')
+      setIsFeedbackView(
+        view === 'feedback' ||
+        view === 'report' ||
+        view === 'bugs' ||
+        window.location.hash === '#feedback' ||
+        window.location.hash === '#report' ||
+        window.location.hash === '#bugs'
+      )
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -564,6 +587,17 @@ ORDER BY average_salary DESC;`
           setActiveTabId('tab-1')
           window.history.pushState({}, '', window.location.pathname)
           setIsDocsView(false)
+        }}
+      />
+    )
+  }
+
+  if (isFeedbackView) {
+    return (
+      <FeedbackPage
+        onBackToStudio={() => {
+          window.history.pushState({}, '', window.location.pathname)
+          setIsFeedbackView(false)
         }}
       />
     )
