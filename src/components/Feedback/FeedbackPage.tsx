@@ -200,18 +200,20 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
           {onBackToStudio ? (
             <button
               onClick={onBackToStudio}
-              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Studio</span>
+              <span className="hidden xs:inline">Back to Studio</span>
+              <span className="xs:hidden">Studio</span>
             </button>
           ) : (
             <a
               href="/"
-              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Open Studio</span>
+              <span className="hidden xs:inline">Open Studio</span>
+              <span className="xs:hidden">Studio</span>
             </a>
           )}
 
@@ -401,7 +403,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Severity
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { id: 'low', label: 'Low', desc: 'Cosmetic', badge: 'hover:border-emerald-500/50' },
                       { id: 'medium', label: 'Medium', desc: 'Unexpected behavior', badge: 'hover:border-amber-500/50' },

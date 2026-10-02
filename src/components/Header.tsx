@@ -17,6 +17,7 @@ import {
   Coffee,
   BookOpen,
   Bug,
+  MoreVertical,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
@@ -61,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [datasetMenuOpen, setDatasetMenuOpen] = useState(false)
   const [importMenuOpen, setImportMenuOpen] = useState(false)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
   const sqlFileInputRef = useRef<HTMLInputElement>(null)
@@ -407,172 +409,305 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Right Controls: Import, Export, Docs, Feedback, Coffee, Shortcuts, Theme */}
+      {/* Right Controls: Desktop Bar & Mobile More Menu */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Import Menu */}
-        <div className="relative">
+        {/* Desktop Controls (Visible on sm and up) */}
+        <div className="hidden sm:flex items-center gap-1.5 sm:gap-2">
+          {/* Import Menu */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setImportMenuOpen(!importMenuOpen)
+                setExportMenuOpen(false)
+                setDatasetMenuOpen(false)
+              }}
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs"
+            >
+              <Upload className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+              <span>Import</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {importMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setImportMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-1.5 w-52 rounded-xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
+                  <button
+                    onClick={() => {
+                      setImportMenuOpen(false)
+                      onOpenCsvModal()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                    <div>
+                      <div className="font-medium text-xs">Import CSV</div>
+                      <div className="text-[10px] text-slate-500 dark:text-neutral-400">Auto-create table from CSV</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => sqlFileInputRef.current?.click()}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileCode className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    <div>
+                      <div className="font-medium text-xs">Execute .SQL File</div>
+                      <div className="text-[10px] text-slate-500 dark:text-neutral-400">Run scripts and DDL</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => dbFileInputRef.current?.click()}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    <div>
+                      <div className="font-medium text-xs">Load SQLite .db</div>
+                      <div className="text-[10px] text-slate-500 dark:text-neutral-400">Open custom SQLite file</div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Export Menu */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setExportMenuOpen(!exportMenuOpen)
+                setImportMenuOpen(false)
+                setDatasetMenuOpen(false)
+              }}
+              className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+              <span>Export</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {exportMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setExportMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-1.5 w-52 rounded-xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
+                  <button
+                    onClick={handleExportSqlite}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                    <div>
+                      <div className="font-medium text-xs">SQLite Database (.sqlite)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-neutral-400">Binary SQLite file</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={handleExportDump}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileCode className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <div>
+                      <div className="font-medium text-xs">SQL Dump Script (.sql)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-neutral-400">DDL & INSERT statements</div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Vertical Divider */}
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+          {/* SQL Documentation (Opens in New Tab) */}
+          <a
+            href="?view=docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="SQL Documentation & All Queries (Opens in new tab)"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+            <span>Docs</span>
+          </a>
+
+          {/* Report Bug / Feedback (Opens in New Tab) */}
+          <a
+            href="?view=feedback"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Report Bug / Feedback (Opens in new tab)"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
+          >
+            <Bug className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
+            <span className="hidden md:inline">Report Bug</span>
+          </a>
+
+          {/* Vertical Divider */}
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+          {/* Buy Me a Coffee (Built-in Modal) */}
+          <button
+            onClick={onOpenCoffeeModal}
+            title="Buy me a coffee (Built-in)"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer group"
+          >
+            <Coffee className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 shrink-0 group-hover:scale-110 transition-transform" />
+            <span>Buy me a coffee</span>
+          </button>
+
+          {/* Vertical Divider */}
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+          {/* Shortcuts Cheat Sheet */}
+          <button
+            onClick={onOpenShortcutsModal}
+            title="Keyboard shortcuts"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
+          >
+            <Keyboard className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Mobile Overflow Menu Button (Visible on < sm) */}
+        <div className="relative sm:hidden">
           <button
             onClick={() => {
-              setImportMenuOpen(!importMenuOpen)
+              setMobileMenuOpen(!mobileMenuOpen)
+              setImportMenuOpen(false)
               setExportMenuOpen(false)
               setDatasetMenuOpen(false)
             }}
-            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs"
+            title="More actions"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
           >
-            <Upload className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
-            <span className="hidden sm:inline">Import</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
+            <MoreVertical className="w-3.5 h-3.5" />
           </button>
 
-          {importMenuOpen && (
+          {mobileMenuOpen && (
             <>
               <div
-                className="fixed inset-0 z-40"
-                onClick={() => setImportMenuOpen(false)}
+                className="fixed inset-0 z-40 bg-black/20"
+                onClick={() => setMobileMenuOpen(false)}
               />
-              <div className="absolute right-0 mt-1.5 w-52 rounded-xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
-                <button
-                  onClick={() => {
-                    setImportMenuOpen(false)
-                    onOpenCsvModal()
-                  }}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                  <div>
-                    <div className="font-medium text-xs">Import CSV</div>
-                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Auto-create table from CSV</div>
+              <div className="absolute right-0 mt-1.5 w-60 rounded-2xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+                {/* Data Operations */}
+                <div className="py-1">
+                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Data & Files
                   </div>
-                </button>
-                <button
-                  onClick={() => sqlFileInputRef.current?.click()}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
-                >
-                  <FileCode className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                  <div>
-                    <div className="font-medium text-xs">Execute .SQL File</div>
-                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Run scripts and DDL</div>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      onOpenCsvModal()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                    <span>Import CSV</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      sqlFileInputRef.current?.click()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileCode className="w-4 h-4 text-cyan-500" />
+                    <span>Execute .SQL File</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      dbFileInputRef.current?.click()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <DbIcon className="w-4 h-4 text-indigo-500" />
+                    <span>Load SQLite .db</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      handleExportSqlite()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <Download className="w-4 h-4 text-indigo-500" />
+                    <span>Export SQLite (.sqlite)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      handleExportDump()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <FileCode className="w-4 h-4 text-amber-500" />
+                    <span>Export SQL Dump (.sql)</span>
+                  </button>
+                </div>
+
+                {/* Resources & Support */}
+                <div className="py-1">
+                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Resources & Help
                   </div>
-                </button>
-                <button
-                  onClick={() => dbFileInputRef.current?.click()}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
-                >
-                  <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                  <div>
-                    <div className="font-medium text-xs">Load SQLite .db</div>
-                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Open custom SQLite file</div>
-                  </div>
-                </button>
+                  <a
+                    href="?view=docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200 no-underline"
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-500" />
+                    <span>SQL Documentation</span>
+                  </a>
+                  <a
+                    href="?view=feedback"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200 no-underline"
+                  >
+                    <Bug className="w-4 h-4 text-rose-500" />
+                    <span>Report Bug / Feedback</span>
+                  </a>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      onOpenCoffeeModal()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <Coffee className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                    <span>Buy Me a Coffee</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      onOpenShortcutsModal()
+                    }}
+                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
+                  >
+                    <Keyboard className="w-4 h-4 text-slate-400" />
+                    <span>Keyboard Shortcuts</span>
+                  </button>
+                </div>
               </div>
             </>
           )}
         </div>
 
-        {/* Export Menu */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              setExportMenuOpen(!exportMenuOpen)
-              setImportMenuOpen(false)
-              setDatasetMenuOpen(false)
-            }}
-            className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
-            <span className="hidden sm:inline">Export</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
-
-          {exportMenuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setExportMenuOpen(false)}
-              />
-              <div className="absolute right-0 mt-1.5 w-52 rounded-xl bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
-                <button
-                  onClick={handleExportSqlite}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
-                >
-                  <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                  <div>
-                    <div className="font-medium text-xs">SQLite Database (.sqlite)</div>
-                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Binary SQLite file</div>
-                  </div>
-                </button>
-                <button
-                  onClick={handleExportDump}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
-                >
-                  <FileCode className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  <div>
-                    <div className="font-medium text-xs">SQL Dump Script (.sql)</div>
-                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">DDL & INSERT statements</div>
-                  </div>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Vertical Divider */}
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block mx-0.5" />
-
-        {/* SQL Documentation (Opens in New Tab) */}
-        <a
-          href="?view=docs"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="SQL Documentation & All Queries (Opens in new tab)"
-          className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
-        >
-          <BookOpen className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-          <span className="hidden sm:inline">Docs</span>
-        </a>
-
-        {/* Report Bug / Feedback (Opens in New Tab) */}
-        <a
-          href="?view=feedback"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Report Bug / Feedback (Opens in new tab)"
-          className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs no-underline"
-        >
-          <Bug className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-          <span className="hidden md:inline">Report Bug</span>
-        </a>
-
-        {/* Vertical Divider */}
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block mx-0.5" />
-
-        {/* Buy Me a Coffee (Built-in Modal) */}
-        <button
-          onClick={onOpenCoffeeModal}
-          title="Buy me a coffee (Built-in)"
-          className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer group"
-        >
-          <Coffee className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 shrink-0 group-hover:scale-110 transition-transform" />
-          <span className="hidden sm:inline">Buy me a coffee</span>
-        </button>
-
-        {/* Vertical Divider */}
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block mx-0.5" />
-
-        {/* Shortcuts Cheat Sheet */}
-        <button
-          onClick={onOpenShortcutsModal}
-          title="Keyboard shortcuts"
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
-        >
-          <Keyboard className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Theme Toggle */}
+        {/* Theme Toggle (Always directly accessible on both mobile and desktop) */}
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme'}
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer"
+          className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-xs cursor-pointer shrink-0"
         >
           {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
         </button>

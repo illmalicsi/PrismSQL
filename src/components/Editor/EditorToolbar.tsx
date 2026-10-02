@@ -81,17 +81,17 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </div>
 
       {/* Bottom: Action Buttons Bar */}
-      <div className="h-10 px-3 bg-white dark:bg-[#0c0e14] flex items-center justify-between gap-2">
+      <div className="h-10 px-2.5 sm:px-3 bg-white dark:bg-[#0c0e14] flex items-center justify-between gap-1.5 sm:gap-2">
         {/* Left side actions: Run & Explain */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* RUN QUERY BUTTON */}
           <button
             onClick={onRunQuery}
             disabled={isRunning}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-sm shadow-emerald-950/20 active:scale-95 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-sm shadow-emerald-950/20 active:scale-95 transition-all cursor-pointer shrink-0"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? 'animate-spin' : ''}`} />
-            <span>Run Query</span>
+            <span>Run<span className="hidden xs:inline"> Query</span></span>
             <span className="hidden sm:inline-flex items-center gap-0.5 ml-1 text-[10px] font-normal opacity-90 px-1 py-0.2 rounded bg-black/20">
               <span>{cmdKey}</span>
               <span>↵</span>
@@ -101,7 +101,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           {/* Explain Plan */}
           <button
             onClick={onExplainPlan}
-            className="h-7 flex items-center gap-1.5 px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs"
+            className="h-7 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs shrink-0"
           >
             <FileSearch className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
             <span className="hidden md:inline font-medium">Explain Plan</span>
@@ -109,11 +109,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Right side actions: Format, Save, Clear */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <button
             onClick={onFormatSql}
             title={`Format SQL query (${cmdKey}+Shift+F)`}
-            className="h-7 flex items-center gap-1.5 px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs"
+            className="h-7 flex items-center gap-1 px-2 sm:px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs shrink-0"
           >
             <AlignLeft className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
             <span className="hidden sm:inline font-medium">Format</span>
@@ -122,7 +122,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <button
             onClick={onSaveQuery}
             title="Bookmark active query"
-            className="h-7 flex items-center gap-1.5 px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs"
+            className="h-7 flex items-center gap-1 px-2 sm:px-2.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200/80 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white text-xs transition-colors shadow-xs shrink-0"
           >
             <Bookmark className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             <span className="hidden sm:inline font-medium">Save</span>
@@ -131,7 +131,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <button
             onClick={onClearSql}
             title="Clear editor"
-            className="h-7 w-7 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors shadow-xs"
+            className="h-7 w-7 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors shadow-xs shrink-0"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

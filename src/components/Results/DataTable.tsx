@@ -89,13 +89,13 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#0d0e12] select-text">
       {/* Table Subtoolbar: Search & Quick pagination */}
-      <div className="h-9 px-3 border-b border-slate-200 dark:border-neutral-800/80 flex items-center justify-between gap-3 text-xs bg-slate-50 dark:bg-[#101217] shrink-0">
-        <div className="flex items-center gap-2 max-w-xs flex-1">
+      <div className="min-h-9 px-2.5 sm:px-3 py-1 sm:py-0 border-b border-slate-200 dark:border-neutral-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-xs bg-slate-50 dark:bg-[#101217] shrink-0">
+        <div className="flex items-center gap-2 flex-1 min-w-[130px] max-w-xs">
           <div className="relative w-full">
             <Search className="w-3.5 h-3.5 text-slate-400 dark:text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search results in table..."
+              placeholder="Search in table..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -105,23 +105,23 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
             />
           </div>
           {searchQuery && (
-            <span className="text-[10px] text-slate-500 dark:text-neutral-400 whitespace-nowrap">
-              {filteredRows.length} matching
+            <span className="text-[10px] text-slate-500 dark:text-neutral-400 whitespace-nowrap hidden xs:inline">
+              {filteredRows.length} match
             </span>
           )}
         </div>
 
         {/* Pagination controls */}
-        <div className="flex items-center gap-2 text-slate-600 dark:text-neutral-400 text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 dark:text-neutral-400 text-xs shrink-0">
           <div className="flex items-center gap-1 text-[11px]">
-            <span>Rows:</span>
+            <span className="hidden xs:inline">Rows:</span>
             <select
               value={pageSize}
               onChange={(e) => {
                 setPageSize(Number(e.target.value))
                 setCurrentPage(1)
               }}
-              className="bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded px-1.5 py-0.5 text-slate-800 dark:text-neutral-300 text-xs focus:outline-none"
+              className="bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded px-1 py-0.5 text-slate-800 dark:text-neutral-300 text-xs focus:outline-none"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -131,9 +131,9 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
             </select>
           </div>
 
-          <div className="h-3 w-[1px] bg-slate-200 dark:bg-neutral-800 mx-1" />
+          <div className="h-3 w-[1px] bg-slate-200 dark:bg-neutral-800 mx-0.5 sm:mx-1" />
 
-          <span className="text-[11px] font-mono">
+          <span className="text-[10px] sm:text-[11px] font-mono">
             {pageSize === -1
               ? `1-${sortedRows.length} of ${sortedRows.length}`
               : `${(currentPage - 1) * pageSize + 1}-${Math.min(

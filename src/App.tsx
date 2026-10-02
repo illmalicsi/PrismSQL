@@ -36,7 +36,7 @@ import { DocsPage } from './components/Docs/DocsPage'
 import { FeedbackPage } from './components/Feedback/FeedbackPage'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
-import { Loader2, AlertCircle, Coffee } from 'lucide-react'
+import { Loader2, AlertCircle, Coffee, Code2, Table2, Columns } from 'lucide-react'
 
 const DEFAULT_QUERY = ''
 
@@ -149,7 +149,20 @@ export function AppContent() {
   // Layout & Sidebar
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [editorHeightPercent, setEditorHeightPercent] = useState(48) // split %
+  const [mobileWorkspaceView, setMobileWorkspaceView] = useState<'editor' | 'results' | 'split'>('editor')
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth < 768
+  })
   const isDraggingSplitter = useRef(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Modals
   const [csvModalOpen, setCsvModalOpen] = useState(false)
@@ -279,6 +292,11 @@ export function AppContent() {
       if (activeView === 'explain' && !res.error) {
         setActiveView('table')
       }
+
+      // On mobile, automatically show results panel when query is executed
+      if (isMobile && mobileWorkspaceView === 'editor') {
+        setMobileWorkspaceView('results')
+      }
     } catch (err: any) {
       const errMessage = err?.message || String(err)
       const errorDetails = parseSqlError(activeTab.query, errMessage)
@@ -292,10 +310,13 @@ export function AppContent() {
         error: errMessage,
         errorDetails,
       })
+      if (isMobile && mobileWorkspaceView === 'editor') {
+        setMobileWorkspaceView('results')
+      }
     } finally {
       setIsRunning(false)
     }
-  }, [activeTab, activeView])
+  }, [activeTab, activeView, isMobile, mobileWorkspaceView])
 
   // Explain Query Plan
   const handleExplainPlan = useCallback(() => {
@@ -304,10 +325,13 @@ export function AppContent() {
       const exp = explainQuery(activeTab.query)
       setExplainResult(exp)
       setActiveView('explain')
+      if (isMobile && mobileWorkspaceView === 'editor') {
+        setMobileWorkspaceView('results')
+      }
     } catch (err: any) {
       alert(`Explain error: ${err?.message || err}`)
     }
-  }, [activeTab])
+  }, [activeTab, isMobile, mobileWorkspaceView])
 
   // Format SQL
   const handleFormatSql = useCallback(() => {
@@ -463,6 +487,9 @@ ORDER BY average_salary DESC;`
     const res = executeQuery(sql)
     setResult(res)
     setActiveView('table')
+    if (isMobile) {
+      setMobileWorkspaceView('results')
+    }
   }
 
   // Template selection
@@ -472,6 +499,13 @@ ORDER BY average_salary DESC;`
       const res = executeQuery(sql)
       setResult(res)
       setActiveView('table')
+      if (isMobile) {
+        setMobileWorkspaceView('results')
+      }
+    } else {
+      if (isMobile) {
+        setMobileWorkspaceView('editor')
+      }
     }
   }
 
@@ -481,6 +515,9 @@ ORDER BY average_salary DESC;`
     const newTitle = `Query ${tabs.length + 1}`
     setTabs((prev) => [...prev, { id: newId, title: newTitle, query: '' }])
     setActiveTabId(newId)
+    if (isMobile) {
+      setMobileWorkspaceView('editor')
+    }
   }
 
   // Close tab
@@ -514,6 +551,9 @@ ORDER BY average_salary DESC;`
     const res = executeQuery(sql)
     setResult(res)
     setActiveView('table')
+    if (isMobile) {
+      setMobileWorkspaceView('results')
+    }
   }
 
   // Resizable splitter logic
@@ -539,6 +579,34 @@ ORDER BY average_salary DESC;`
     document.removeEventListener('mousemove', handleMouseMoveSplitter)
     document.removeEventListener('mouseup', handleMouseUpSplitter)
   }, [handleMouseMoveSplitter])
+
+  // Touch handlers for mobile splitter resizing
+  const handleTouchStartSplitter = () => {
+    isDraggingSplitter.current = true
+    document.addEventListener('touchmove', handleTouchMoveSplitter, { passive: false })
+    document.addEventListener('touchend', handleTouchEndSplitter)
+    document.addEventListener('touchcancel', handleTouchEndSplitter)
+  }
+
+  const handleTouchMoveSplitter = useCallback((e: TouchEvent) => {
+    if (!isDraggingSplitter.current || !e.touches[0]) return
+    const container = document.getElementById('editor-results-container')
+    if (!container) return
+    const rect = container.getBoundingClientRect()
+    const touchY = e.touches[0].clientY
+    const newPercent = ((touchY - rect.top) / rect.height) * 100
+    if (newPercent >= 15 && newPercent <= 85) {
+      setEditorHeightPercent(newPercent)
+    }
+    if (e.cancelable) e.preventDefault()
+  }, [])
+
+  const handleTouchEndSplitter = useCallback(() => {
+    isDraggingSplitter.current = false
+    document.removeEventListener('touchmove', handleTouchMoveSplitter)
+    document.removeEventListener('touchend', handleTouchEndSplitter)
+    document.removeEventListener('touchcancel', handleTouchEndSplitter)
+  }, [handleTouchMoveSplitter])
 
   if (isInitializing) {
     return (
@@ -663,11 +731,68 @@ ORDER BY average_salary DESC;`
           id="editor-results-container"
           className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden"
         >
-          {/* Top Panel: Editor (hidden if results maximized) */}
-          {!isMaximized && (
+          {/* Mobile Segmented View Switcher (Editor | Results | Split) - Visible on < md */}
+          <div className="md:hidden flex items-center justify-between px-2.5 py-1.5 bg-slate-100 dark:bg-[#0c0e14] border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-[#141724] p-0.5 rounded-lg text-xs flex-1 max-w-[280px]">
+              <button
+                onClick={() => setMobileWorkspaceView('editor')}
+                className={`flex-1 py-1 rounded-md text-[11px] font-medium flex items-center justify-center gap-1 transition-all ${
+                  mobileWorkspaceView === 'editor'
+                    ? 'bg-white dark:bg-[#1f2438] text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Code2 className="w-3 h-3" />
+                <span>Editor</span>
+              </button>
+              <button
+                onClick={() => setMobileWorkspaceView('results')}
+                className={`flex-1 py-1 rounded-md text-[11px] font-medium flex items-center justify-center gap-1 transition-all relative ${
+                  mobileWorkspaceView === 'results'
+                    ? 'bg-white dark:bg-[#1f2438] text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Table2 className="w-3 h-3" />
+                <span>Results</span>
+                {result && !result.error && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+                {result?.error && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setMobileWorkspaceView('split')}
+                className={`flex-1 py-1 rounded-md text-[11px] font-medium flex items-center justify-center gap-1 transition-all ${
+                  mobileWorkspaceView === 'split'
+                    ? 'bg-white dark:bg-[#1f2438] text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Columns className="w-3 h-3 rotate-90" />
+                <span>Split</span>
+              </button>
+            </div>
+
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono pr-1">
+              {mobileWorkspaceView === 'editor' && '100% Editor'}
+              {mobileWorkspaceView === 'results' && '100% Results'}
+              {mobileWorkspaceView === 'split' && `${Math.round(editorHeightPercent)}% / ${100 - Math.round(editorHeightPercent)}%`}
+            </div>
+          </div>
+
+          {/* Top Panel: Editor */}
+          {(!isMaximized && (!isMobile || mobileWorkspaceView === 'editor' || mobileWorkspaceView === 'split')) && (
             <div
-              style={{ height: `${editorHeightPercent}%` }}
-              className="flex flex-col min-h-[140px] relative border-b border-slate-200 dark:border-slate-800 overflow-hidden"
+              style={{
+                height: !isMobile
+                  ? `${editorHeightPercent}%`
+                  : mobileWorkspaceView === 'editor'
+                  ? '100%'
+                  : `${editorHeightPercent}%`,
+              }}
+              className="flex flex-col min-h-[120px] md:min-h-[140px] relative border-b border-slate-200 dark:border-slate-800 overflow-hidden"
             >
               <EditorToolbar
                 tabs={tabs}
@@ -695,33 +820,42 @@ ORDER BY average_salary DESC;`
             </div>
           )}
 
-          {/* Resizer Splitter Bar (hidden if results maximized) */}
-          {!isMaximized && (
+          {/* Resizer Splitter Bar */}
+          {(!isMaximized && (!isMobile || mobileWorkspaceView === 'split')) && (
             <div
               onMouseDown={handleMouseDownSplitter}
-              className="h-1.5 bg-slate-200 dark:bg-neutral-800/80 hover:bg-indigo-500 dark:hover:bg-indigo-500 cursor-row-resize transition-colors z-10 shrink-0 select-none flex items-center justify-center group"
+              onTouchStart={handleTouchStartSplitter}
+              className="h-2.5 sm:h-1.5 touch-none bg-slate-200 dark:bg-neutral-800/80 hover:bg-indigo-500 dark:hover:bg-indigo-500 active:bg-indigo-500 cursor-row-resize transition-colors z-10 shrink-0 select-none flex items-center justify-center group"
             >
-              <div className="w-8 h-0.5 rounded-full bg-slate-400 dark:bg-neutral-600 group-hover:bg-white" />
+              <div className="w-10 sm:w-8 h-1 sm:h-0.5 rounded-full bg-slate-400 dark:bg-neutral-600 group-hover:bg-white group-active:bg-white" />
             </div>
           )}
 
           {/* Bottom Panel: Results */}
-          <div
-            style={{
-              height: isMaximized ? '100%' : `${100 - editorHeightPercent}%`,
-            }}
-            className="flex-1 flex flex-col min-h-[140px] relative overflow-hidden"
-          >
-            <ResultsContainer
-              result={result}
-              explainResult={explainResult}
-              activeView={activeView}
-              setActiveView={setActiveView}
-              isMaximized={isMaximized}
-              onToggleMaximize={() => setIsMaximized(!isMaximized)}
-              originalQuery={activeTab.query}
-            />
-          </div>
+          {(isMaximized || !isMobile || mobileWorkspaceView === 'results' || mobileWorkspaceView === 'split') && (
+            <div
+              style={{
+                height: isMaximized
+                  ? '100%'
+                  : !isMobile
+                  ? `${100 - editorHeightPercent}%`
+                  : mobileWorkspaceView === 'results'
+                  ? '100%'
+                  : `${100 - editorHeightPercent}%`,
+              }}
+              className="flex-1 flex flex-col min-h-[120px] md:min-h-[140px] relative overflow-hidden"
+            >
+              <ResultsContainer
+                result={result}
+                explainResult={explainResult}
+                activeView={activeView}
+                setActiveView={setActiveView}
+                isMaximized={isMaximized}
+                onToggleMaximize={() => setIsMaximized(!isMaximized)}
+                originalQuery={activeTab.query}
+              />
+            </div>
+          )}
         </div>
       </div>
 
