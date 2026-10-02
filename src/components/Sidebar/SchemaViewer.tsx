@@ -80,7 +80,15 @@ export const SchemaViewer: React.FC<SchemaViewerProps> = ({
 
       {/* Tables List */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
-        {filteredSchemas.length === 0 ? (
+        {schemas.length === 0 ? (
+          <div className="p-6 text-center text-slate-400 dark:text-neutral-500 flex flex-col items-center justify-center h-48">
+            <Layers className="w-8 h-8 mb-2 opacity-40 text-indigo-500" />
+            <p className="text-xs font-semibold text-slate-700 dark:text-neutral-300">No tables in this database</p>
+            <p className="text-[11px] text-slate-400 dark:text-neutral-500 mt-1 max-w-[210px]">
+              Run a <code className="font-mono text-indigo-600 dark:text-indigo-400">CREATE TABLE</code> query in the editor or import a CSV file.
+            </p>
+          </div>
+        ) : filteredSchemas.length === 0 ? (
           <div className="p-6 text-center text-slate-400 dark:text-neutral-500">
             <Layers className="w-6 h-6 mx-auto mb-2 opacity-40" />
             <p className="text-xs">No matching tables found</p>

@@ -82,10 +82,10 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
       {/* Results Header Bar */}
       <div className="h-10 px-3 bg-slate-50 dark:bg-[#090a0f] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
         {/* Left: View Tabs */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0">
           <button
             onClick={() => setActiveView('table')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 ${
               activeView === 'table'
                 ? 'bg-white dark:bg-[#1a1e2b] text-indigo-600 dark:text-indigo-400 font-medium shadow-xs border border-slate-200 dark:border-slate-700/60'
                 : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
@@ -97,44 +97,44 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
 
           <button
             onClick={() => setActiveView('chart')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 ${
               activeView === 'chart'
                 ? 'bg-white dark:bg-[#1a1e2b] text-indigo-600 dark:text-indigo-400 font-medium shadow-xs border border-slate-200 dark:border-slate-700/60'
                 : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
-            <span>Visualize</span>
+            <span className="hidden xs:inline">Chart</span>
           </button>
 
           <button
             onClick={() => setActiveView('explain')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 ${
               activeView === 'explain'
                 ? 'bg-white dark:bg-[#1a1e2b] text-indigo-600 dark:text-indigo-400 font-medium shadow-xs border border-slate-200 dark:border-slate-700/60'
                 : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <FileSearch className="w-3.5 h-3.5" />
-            <span>Explain Plan</span>
+            <span className="hidden sm:inline">Explain</span>
           </button>
 
           <button
             onClick={() => setActiveView('json')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-xs transition-colors shrink-0 ${
               activeView === 'json'
                 ? 'bg-white dark:bg-[#1a1e2b] text-indigo-600 dark:text-indigo-400 font-medium shadow-xs border border-slate-200 dark:border-slate-700/60'
                 : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <Code2 className="w-3.5 h-3.5" />
-            <span>Raw JSON</span>
+            <span className="hidden sm:inline">JSON</span>
           </button>
         </div>
 
         {/* Center: Execution Stats Badges */}
         {result && !result.error && (
-          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-neutral-400">
+          <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-neutral-400">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
               <span>{result.executionTimeMs}ms</span>
@@ -152,15 +152,15 @@ export const ResultsContainer: React.FC<ResultsContainerProps> = ({
         )}
 
         {/* Right: Export Menu & Maximize */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {result && !result.error && result.columns.length > 0 && (
             <div className="relative">
               <button
                 onClick={() => setExportMenuOpen(!exportMenuOpen)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 <Download className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden md:inline font-medium">Export Results</span>
+                <span className="hidden sm:inline font-medium">Export</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 

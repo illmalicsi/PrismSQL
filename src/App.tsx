@@ -6,6 +6,7 @@ import type {
   HistoryItem,
   SavedQuery,
   EditorTab,
+  CustomDatabase,
 } from './types/sql'
 import {
   initDatabase,
@@ -13,6 +14,11 @@ import {
   explainQuery,
   getSchema,
   subscribeToSchema,
+  subscribeToDbChange,
+  createNewDatabase,
+  getStoredCustomDatabases,
+  deleteCustomDatabaseFromStorage,
+  getCurrentDbName,
 } from './lib/db'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar/Sidebar'
@@ -23,6 +29,7 @@ import { CsvImportModal } from './components/Modals/CsvImportModal'
 import { TableDetailsModal } from './components/Modals/TableDetailsModal'
 import { SaveQueryModal } from './components/Modals/SaveQueryModal'
 import { ShortcutsModal } from './components/Modals/ShortcutsModal'
+import { CreateDatabaseModal } from './components/Modals/CreateDatabaseModal'
 import { ThemeProvider } from './context/ThemeContext'
 import { PrismLogo } from './components/PrismLogo'
 import { Loader2, AlertCircle } from 'lucide-react'
@@ -46,8 +53,17 @@ LIMIT 15;`
 export function AppContent() {
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
-  const [currentDataset, setCurrentDataset] = useState('ecommerce')
+  const [currentDataset, setCurrentDataset] = useState(() => {
+    try {
+      return localStorage.getItem('sqlplayground_active_dataset') || 'ecommerce'
+    } catch {
+      return 'ecommerce'
+    }
+  })
+  const [currentDbName, setCurrentDbName] = useState(() => getCurrentDbName())
+  const [customDatabases, setCustomDatabases] = useState<CustomDatabase[]>(() => getStoredCustomDatabases())
   const [schemas, setSchemas] = useState<TableSchema[]>([])
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   // Editor Tabs
   const [tabs, setTabs] = useState<EditorTab[]>([
@@ -71,6 +87,7 @@ export function AppContent() {
   const [csvModalOpen, setCsvModalOpen] = useState(false)
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
   const [saveModalOpen, setSaveModalOpen] = useState(false)
+  const [createDbModalOpen, setCreateDbModalOpen] = useState(false)
   const [inspectedTable, setInspectedTable] = useState<TableSchema | null>(null)
 
   // History & Saved Queries (Local Storage)
@@ -120,6 +137,8 @@ export function AppContent() {
         if (!isMounted) return
         const s = getSchema()
         setSchemas(s)
+        setCurrentDbName(getCurrentDbName())
+        setCustomDatabases(getStoredCustomDatabases())
 
         // Run initial default query to populate results
         const res = executeQuery(DEFAULT_QUERY)
@@ -134,13 +153,22 @@ export function AppContent() {
     }
     setup()
 
-    const unsubscribe = subscribeToSchema((newSchemas) => {
+    const unsubscribeSchema = subscribeToSchema((newSchemas) => {
       if (isMounted) setSchemas(newSchemas)
+    })
+
+    const unsubscribeDb = subscribeToDbChange(({ id, name }) => {
+      if (isMounted) {
+        setCurrentDataset(id)
+        setCurrentDbName(name)
+        setCustomDatabases(getStoredCustomDatabases())
+      }
     })
 
     return () => {
       isMounted = false
-      unsubscribe()
+      unsubscribeSchema()
+      unsubscribeDb()
     }
   }, [])
 
@@ -230,7 +258,10 @@ export function AppContent() {
 
       // Switch default query according to dataset
       let starterSql = ''
-      if (datasetId === 'ecommerce') {
+      const customDb = customDatabases.find((c) => c.id === datasetId)
+      if (customDb) {
+        starterSql = customDb.sql || `-- Database: ${customDb.name}\n-- Ready for SQL queries\n`
+      } else if (datasetId === 'ecommerce') {
         starterSql = DEFAULT_QUERY
       } else if (datasetId === 'saas') {
         starterSql = `SELECT 
@@ -252,7 +283,7 @@ JOIN employees e ON d.id = e.department_id
 GROUP BY d.id, d.name
 ORDER BY average_salary DESC;`
       } else {
-        starterSql = 'SELECT * FROM notes;'
+        starterSql = 'SELECT * FROM sqlite_master;'
       }
 
       setTabs([{ id: 'tab-1', title: 'Query 1', query: starterSql }])
@@ -264,6 +295,53 @@ ORDER BY average_salary DESC;`
       alert(`Error loading dataset: ${err?.message || err}`)
     } finally {
       setIsInitializing(false)
+    }
+  }
+
+  // Create New Database
+  const handleCreateDatabase = async (name: string, starterSql?: string) => {
+    try {
+      setIsInitializing(true)
+      const newId = await createNewDatabase(name, starterSql)
+      setCurrentDataset(newId)
+      setCurrentDbName(name)
+      setCustomDatabases(getStoredCustomDatabases())
+      const newSchemas = getSchema()
+      setSchemas(newSchemas)
+
+      let initialTabSql = ''
+      if (newSchemas.length > 0) {
+        const firstTable = newSchemas[0].name
+        initialTabSql = `-- Active Database: ${name}\n-- Automatically previewing "${firstTable}"\nSELECT * FROM "${firstTable}" LIMIT 50;\n`
+        setTabs([{ id: 'tab-1', title: 'Query 1', query: initialTabSql }])
+        setActiveTabId('tab-1')
+        const res = executeQuery(`SELECT * FROM "${firstTable}" LIMIT 50;`)
+        setResult(res)
+        setActiveView('table')
+      } else {
+        initialTabSql = `-- Active Database: ${name}\n-- Write and run CREATE TABLE to start adding tables:\n\nCREATE TABLE notes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    title TEXT NOT NULL,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);\n`
+        setTabs([{ id: 'tab-1', title: 'Query 1', query: initialTabSql }])
+        setActiveTabId('tab-1')
+        setResult(null)
+      }
+    } catch (err: any) {
+      alert(`Failed to create database: ${err?.message || err}`)
+    } finally {
+      setIsInitializing(false)
+    }
+  }
+
+  // Delete Custom Database
+  const handleDeleteCustomDb = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const target = customDatabases.find((c) => c.id === id)
+    if (!target) return
+    if (confirm(`Are you sure you want to delete custom database "${target.name}"?`)) {
+      deleteCustomDatabaseFromStorage(id)
+      setCustomDatabases(getStoredCustomDatabases())
+      if (currentDataset === id) {
+        handleSelectDataset('ecommerce')
+      }
     }
   }
 
@@ -402,11 +480,21 @@ ORDER BY average_salary DESC;`
       {/* Top Header */}
       <Header
         currentDataset={currentDataset}
-        onSelectDataset={handleSelectDataset}
+        currentDbName={currentDbName}
+        customDatabases={customDatabases}
+        tableCount={schemas.length}
+        mobileSidebarOpen={mobileSidebarOpen}
+        onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        onSelectDataset={(id) => {
+          handleSelectDataset(id)
+          setMobileSidebarOpen(false)
+        }}
         onResetDb={handleResetDb}
         onOpenCsvModal={() => setCsvModalOpen(true)}
         onOpenShortcutsModal={() => setShortcutsModalOpen(true)}
         onSelectTemplate={(sql) => handleSelectTemplate(sql, false)}
+        onOpenCreateDbModal={() => setCreateDbModalOpen(true)}
+        onDeleteCustomDb={handleDeleteCustomDb}
       />
 
       {/* Main Workspace Body */}
@@ -418,11 +506,22 @@ ORDER BY average_salary DESC;`
           savedQueries={savedQueries}
           currentDataset={currentDataset}
           isCollapsed={isSidebarCollapsed}
+          isMobileOpen={mobileSidebarOpen}
+          onCloseMobile={() => setMobileSidebarOpen(false)}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          onSelectTable={handleSelectTable}
+          onSelectTable={(tbl) => {
+            handleSelectTable(tbl)
+            setMobileSidebarOpen(false)
+          }}
           onPreviewTable={(tbl) => setInspectedTable(tbl)}
-          onSelectTemplate={handleSelectTemplate}
-          onSelectHistoryQuery={(sql) => updateActiveQuery(sql)}
+          onSelectTemplate={(sql, run) => {
+            handleSelectTemplate(sql, run)
+            setMobileSidebarOpen(false)
+          }}
+          onSelectHistoryQuery={(sql) => {
+            updateActiveQuery(sql)
+            setMobileSidebarOpen(false)
+          }}
           onClearHistory={() => setHistory([])}
           onDeleteSavedQuery={(id) =>
             setSavedQueries((prev) => prev.filter((q) => q.id !== id))
@@ -516,6 +615,11 @@ ORDER BY average_salary DESC;`
       <ShortcutsModal
         isOpen={shortcutsModalOpen}
         onClose={() => setShortcutsModalOpen(false)}
+      />
+      <CreateDatabaseModal
+        isOpen={createDbModalOpen}
+        onClose={() => setCreateDbModalOpen(false)}
+        onCreate={handleCreateDatabase}
       />
     </div>
   )

@@ -78,4 +78,12 @@ export interface Dataset {
   description: string
   badge: string
   sql: string
+  isCustom?: boolean
+}
+
+export interface CustomDatabase {
+  id: string
+  name: string
+  createdAt: number
+  sql?: string
 }

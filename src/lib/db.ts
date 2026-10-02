@@ -1,6 +1,6 @@
 import type { Database, SqlJsStatic } from 'sql.js'
 import Papa from 'papaparse'
-import type { QueryResult, TableSchema, TableColumn, ForeignKey } from '../types/sql'
+import type { QueryResult, TableSchema, TableColumn, ForeignKey, CustomDatabase } from '../types/sql'
 import { DATASETS } from '../data/datasets'
 
 declare global {
@@ -12,9 +12,13 @@ declare global {
 let SQL: SqlJsStatic | null = null
 let db: Database | null = null
 let currentDatasetId = 'ecommerce'
+let currentDbName = 'E-Commerce Store'
 
 type SchemaListener = (schema: TableSchema[]) => void
 const schemaListeners: Set<SchemaListener> = new Set()
+
+type DbChangeListener = (info: { id: string; name: string }) => void
+const dbChangeListeners: Set<DbChangeListener> = new Set()
 
 export function subscribeToSchema(listener: SchemaListener): () => void {
   schemaListeners.add(listener)
@@ -23,10 +27,44 @@ export function subscribeToSchema(listener: SchemaListener): () => void {
   }
 }
 
+export function subscribeToDbChange(listener: DbChangeListener): () => void {
+  dbChangeListeners.add(listener)
+  return () => {
+    dbChangeListeners.delete(listener)
+  }
+}
+
 function notifySchemaChange() {
   if (!db) return
   const schema = getSchema()
   schemaListeners.forEach((fn) => fn(schema))
+}
+
+function notifyDbChange() {
+  dbChangeListeners.forEach((fn) => fn({ id: currentDatasetId, name: currentDbName }))
+}
+
+// Custom Databases storage in localStorage
+export function getStoredCustomDatabases(): CustomDatabase[] {
+  try {
+    const raw = localStorage.getItem('sqlplayground_custom_dbs')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveCustomDatabaseToStorage(newDb: CustomDatabase): void {
+  const existing = getStoredCustomDatabases()
+  const filtered = existing.filter((d) => d.id !== newDb.id)
+  const updated = [newDb, ...filtered]
+  localStorage.setItem('sqlplayground_custom_dbs', JSON.stringify(updated))
+}
+
+export function deleteCustomDatabaseFromStorage(id: string): void {
+  const existing = getStoredCustomDatabases()
+  const updated = existing.filter((d) => d.id !== id)
+  localStorage.setItem('sqlplayground_custom_dbs', JSON.stringify(updated))
 }
 
 export async function getSqlInstance(): Promise<SqlJsStatic> {
@@ -45,7 +83,6 @@ export async function getSqlInstance(): Promise<SqlJsStatic> {
     if (existing) {
       existing.addEventListener('load', () => resolve())
       existing.addEventListener('error', () => reject(new Error('Failed to load /sql-wasm.js')))
-      // If it already loaded before listener
       if (typeof window.initSqlJs === 'function') return resolve()
       return
     }
@@ -66,23 +103,130 @@ export async function getSqlInstance(): Promise<SqlJsStatic> {
   return SQL
 }
 
-export async function initDatabase(datasetId = 'ecommerce'): Promise<void> {
+export function saveActiveCustomDbState(): void {
+  if (!db) return
+  if (!currentDatasetId.startsWith('custom_')) return
+  const customDbs = getStoredCustomDatabases()
+  const found = customDbs.find((d) => d.id === currentDatasetId)
+  if (found) {
+    try {
+      found.sql = exportSqlDump()
+      saveCustomDatabaseToStorage(found)
+    } catch (e) {
+      console.warn('Failed to auto-save custom database state:', e)
+    }
+  }
+}
+
+export async function initDatabase(datasetId = 'ecommerce', customName?: string): Promise<void> {
   const sql = await getSqlInstance()
+  if (db && currentDatasetId.startsWith('custom_')) {
+    saveActiveCustomDbState()
+  }
   if (db) {
     db.close()
   }
   db = new sql.Database()
   currentDatasetId = datasetId
 
-  const dataset = DATASETS.find((d) => d.id === datasetId) || DATASETS[0]
-  if (dataset && dataset.sql) {
-    db.exec(dataset.sql)
+  // Check if standard preset dataset
+  const dataset = DATASETS.find((d) => d.id === datasetId)
+  if (dataset) {
+    currentDbName = dataset.name
+    if (dataset.sql) {
+      db.exec(dataset.sql)
+    }
+  } else {
+    // Check if user custom database
+    const customDbs = getStoredCustomDatabases()
+    const custom = customDbs.find((d) => d.id === datasetId)
+    if (custom) {
+      currentDbName = custom.name
+      if (custom.sql && custom.sql.trim()) {
+        try {
+          db.exec(custom.sql)
+        } catch (e) {
+          console.warn('Error loading custom db SQL:', e)
+        }
+      }
+    } else {
+      currentDbName = customName || 'Custom Database'
+    }
   }
+
+  try {
+    localStorage.setItem('sqlplayground_active_dataset', datasetId)
+  } catch (e) {
+    console.error(e)
+  }
+
   notifySchemaChange()
+  notifyDbChange()
+}
+
+export async function createNewDatabase(name: string, initialSql?: string): Promise<string> {
+  const sql = await getSqlInstance()
+  if (db && currentDatasetId.startsWith('custom_')) {
+    saveActiveCustomDbState()
+  }
+  if (db) {
+    db.close()
+  }
+  db = new sql.Database()
+
+  const cleanName = name.trim() || 'New Database'
+  const id = `custom_${Date.now()}`
+  currentDatasetId = id
+  currentDbName = cleanName
+
+  // If no initialSql provided or empty, create a starter table so the active database is never empty!
+  const defaultStarterSql = `CREATE TABLE items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    category TEXT DEFAULT 'General',
+    quantity INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO items (name, category, quantity) VALUES
+('Sample Item A', 'Inventory', 10),
+('Sample Item B', 'Inventory', 25);
+`
+  const starterSql = initialSql !== undefined && initialSql !== '' ? initialSql : defaultStarterSql
+
+  if (starterSql.trim()) {
+    try {
+      db.exec(starterSql)
+    } catch (e) {
+      console.warn('Initial SQL execution warning:', e)
+    }
+  }
+
+  // Persist in localStorage
+  saveCustomDatabaseToStorage({
+    id,
+    name: cleanName,
+    createdAt: Date.now(),
+    sql: starterSql,
+  })
+
+  try {
+    localStorage.setItem('sqlplayground_active_dataset', id)
+  } catch (e) {
+    console.error(e)
+  }
+
+  notifySchemaChange()
+  notifyDbChange()
+  return id
 }
 
 export function getCurrentDatasetId(): string {
   return currentDatasetId
+}
+
+export function getCurrentDbName(): string {
+  return currentDbName
 }
 
 export function executeQuery(rawSql: string): QueryResult {
@@ -103,12 +247,135 @@ export function executeQuery(rawSql: string): QueryResult {
   }
 
   const startTime = performance.now()
+
+  // 1. SMART INTERCEPTOR: CREATE DATABASE <name>
+  const createDbMatch = trimmed.match(
+    /^CREATE\s+DATABASE\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]?([a-zA-Z0-9_\-\s]+)["`]?\s*;?(.*)$/is
+  )
+  if (createDbMatch) {
+    const newDbName = createDbMatch[1].trim()
+    const remainingSql = createDbMatch[2].trim()
+
+    // Create and switch database
+    createNewDatabase(newDbName, remainingSql)
+    const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+
+    return {
+      columns: ['Status', 'Active Database', 'Engine Note'],
+      values: [
+        [
+          `✓ Database "${newDbName}" created and activated successfully!`,
+          newDbName,
+          'In SQLite, each workspace is a database. PrismSQL has partitioned a new database space for you.',
+        ],
+      ],
+      executionTimeMs: elapsed,
+      rowsAffected: 1,
+      query: trimmed,
+      timestamp: Date.now(),
+    }
+  }
+
+  // 2. SMART INTERCEPTOR: SHOW DATABASES
+  if (/^SHOW\s+DATABASES\s*;?$/i.test(trimmed)) {
+    const customDbs = getStoredCustomDatabases()
+    const allDbs = [
+      ...DATASETS.map((d) => [d.name, d.id === currentDatasetId ? 'YES (Active)' : 'NO', 'Built-in Preset', d.badge]),
+      ...customDbs.map((c) => [c.name, c.id === currentDatasetId ? 'YES (Active)' : 'NO', 'Custom Database', 'User Created']),
+    ]
+    const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+    return {
+      columns: ['Database Name', 'Current', 'Type', 'Badge'],
+      values: allDbs,
+      executionTimeMs: elapsed,
+      rowsAffected: allDbs.length,
+      query: trimmed,
+      timestamp: Date.now(),
+    }
+  }
+
+  // 3. SMART INTERCEPTOR: SHOW TABLES
+  if (/^SHOW\s+TABLES\s*;?$/i.test(trimmed)) {
+    const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+    const schemas = getSchema()
+    return {
+      columns: [`Tables_in_${currentDbName.replace(/\s+/g, '_')}`, 'Row Count', 'Columns'],
+      values: schemas.map((s) => [s.name, s.rowCount, s.columns.length]),
+      executionTimeMs: elapsed,
+      rowsAffected: schemas.length,
+      query: trimmed,
+      timestamp: Date.now(),
+    }
+  }
+
+  // 4. SMART INTERCEPTOR: DESCRIBE / DESC <table>
+  const descMatch = trimmed.match(/^(?:DESCRIBE|DESC)\s+["`]?([a-zA-Z0-9_]+)["`]?\s*;?$/i)
+  if (descMatch) {
+    const tableName = descMatch[1]
+    const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+    try {
+      const colRes = db.exec(`PRAGMA table_info("${tableName}");`)
+      if (colRes.length > 0 && colRes[0].values.length > 0) {
+        return {
+          columns: ['Column (#)', 'Field', 'Type', 'Null', 'Key', 'Default'],
+          values: colRes[0].values.map((c) => [
+            c[0],
+            c[1],
+            c[2],
+            c[3] ? 'NO' : 'YES',
+            c[5] ? 'PRI' : '',
+            c[4] ?? 'NULL',
+          ]),
+          executionTimeMs: elapsed,
+          rowsAffected: colRes[0].values.length,
+          query: trimmed,
+          timestamp: Date.now(),
+        }
+      }
+    } catch {
+      // Fall through to normal executor if pragma fails
+    }
+  }
+
+  // 5. SMART INTERCEPTOR: USE <db_name>
+  const useMatch = trimmed.match(/^USE\s+["`]?([a-zA-Z0-9_\-\s]+)["`]?\s*;?$/i)
+  if (useMatch) {
+    const targetName = useMatch[1].trim()
+    const customDbs = getStoredCustomDatabases()
+    const targetCustom = customDbs.find((d) => d.name.toLowerCase() === targetName.toLowerCase() || d.id === targetName)
+    const targetPreset = DATASETS.find((d) => d.name.toLowerCase() === targetName.toLowerCase() || d.id === targetName)
+    const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+
+    if (targetCustom) {
+      initDatabase(targetCustom.id, targetCustom.name)
+      return {
+        columns: ['Status', 'Active Database'],
+        values: [[`✓ Switched to database "${targetCustom.name}"`, targetCustom.name]],
+        executionTimeMs: elapsed,
+        rowsAffected: 1,
+        query: trimmed,
+        timestamp: Date.now(),
+      }
+    } else if (targetPreset) {
+      initDatabase(targetPreset.id, targetPreset.name)
+      return {
+        columns: ['Status', 'Active Database'],
+        values: [[`✓ Switched to database "${targetPreset.name}"`, targetPreset.name]],
+        executionTimeMs: elapsed,
+        rowsAffected: 1,
+        query: trimmed,
+        timestamp: Date.now(),
+      }
+    }
+  }
+
+  // STANDARD EXECUTION
   try {
     const res = db.exec(trimmed)
     const elapsed = Math.round((performance.now() - startTime) * 100) / 100
     const rowsModified = db.getRowsModified()
 
-    // Check if query might have altered schema
+    // Check if query might have altered schema or data
     const upper = trimmed.toUpperCase()
     if (
       upper.includes('CREATE ') ||
@@ -119,6 +386,7 @@ export function executeQuery(rawSql: string): QueryResult {
       upper.includes('UPDATE ')
     ) {
       notifySchemaChange()
+      saveActiveCustomDbState()
     }
 
     if (res.length === 0) {
@@ -144,6 +412,26 @@ export function executeQuery(rawSql: string): QueryResult {
     }
   } catch (err: any) {
     const elapsed = Math.round((performance.now() - startTime) * 100) / 100
+    const errMessage = err?.message || String(err)
+
+    // Educational helpful tip if user wrote unrecognized SQLite DDL
+    if (errMessage.includes('near "DATABASE"') || errMessage.includes('syntax error')) {
+      return {
+        columns: ['Error', 'SQLite Tip'],
+        values: [
+          [
+            errMessage,
+            '💡 In SQLite, the entire active workspace is your database! You can directly run: CREATE TABLE my_table (id INTEGER PRIMARY KEY, ...); or click "+ Create Database" in the top bar.',
+          ],
+        ],
+        executionTimeMs: elapsed,
+        rowsAffected: 0,
+        query: trimmed,
+        timestamp: Date.now(),
+        error: errMessage,
+      }
+    }
+
     return {
       columns: [],
       values: [],
@@ -151,7 +439,7 @@ export function executeQuery(rawSql: string): QueryResult {
       rowsAffected: 0,
       query: trimmed,
       timestamp: Date.now(),
-      error: err?.message || String(err),
+      error: errMessage,
     }
   }
 }
@@ -341,6 +629,7 @@ export function importCsvToTable(
   }
 
   notifySchemaChange()
+  saveActiveCustomDbState()
   return {
     rowCount: rows.length,
     columns: sanitizedHeaders,
@@ -351,6 +640,7 @@ export function importSqlDump(sqlString: string): void {
   if (!db) throw new Error('Database not initialized')
   db.exec(sqlString)
   notifySchemaChange()
+  saveActiveCustomDbState()
 }
 
 export async function importBinaryDb(fileData: Uint8Array): Promise<void> {
@@ -358,7 +648,9 @@ export async function importBinaryDb(fileData: Uint8Array): Promise<void> {
   if (db) db.close()
   db = new sql.Database(fileData)
   currentDatasetId = 'custom'
+  currentDbName = 'Uploaded Database'
   notifySchemaChange()
+  notifyDbChange()
 }
 
 export function exportBinaryDb(): Uint8Array {
@@ -369,7 +661,7 @@ export function exportBinaryDb(): Uint8Array {
 export function exportSqlDump(): string {
   if (!db) throw new Error('Database not initialized')
   const schemas = getSchema()
-  let dump = `-- SQLite Playground Database Dump\n-- Generated on ${new Date().toISOString()}\n\nPRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n\n`
+  let dump = `-- SQLite Playground Database Dump\n-- Database: ${currentDbName}\n-- Generated on ${new Date().toISOString()}\n\nPRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n\n`
 
   for (const table of schemas) {
     dump += `-- Table: ${table.name}\n`
