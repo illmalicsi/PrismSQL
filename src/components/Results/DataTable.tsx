@@ -80,19 +80,19 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
 
   if (!result.columns.length) {
     return (
-      <div className="h-full flex items-center justify-center text-neutral-500 text-xs">
+      <div className="h-full flex items-center justify-center text-slate-400 dark:text-neutral-500 text-xs">
         No results to display
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0e12] select-text">
+    <div className="flex flex-col h-full bg-white dark:bg-[#0d0e12] select-text">
       {/* Table Subtoolbar: Search & Quick pagination */}
-      <div className="h-9 px-3 border-b border-neutral-800/80 flex items-center justify-between gap-3 text-xs bg-[#101217]">
+      <div className="h-9 px-3 border-b border-slate-200 dark:border-neutral-800/80 flex items-center justify-between gap-3 text-xs bg-slate-50 dark:bg-[#101217] shrink-0">
         <div className="flex items-center gap-2 max-w-xs flex-1">
           <div className="relative w-full">
-            <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search results in table..."
@@ -101,18 +101,18 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full bg-[#161822] border border-neutral-800 rounded pl-7 pr-2 py-0.5 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-700"
+              className="w-full bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded pl-7 pr-2 py-0.5 text-xs text-slate-900 dark:text-neutral-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
             />
           </div>
           {searchQuery && (
-            <span className="text-[10px] text-neutral-400 whitespace-nowrap">
+            <span className="text-[10px] text-slate-500 dark:text-neutral-400 whitespace-nowrap">
               {filteredRows.length} matching
             </span>
           )}
         </div>
 
         {/* Pagination controls */}
-        <div className="flex items-center gap-2 text-neutral-400 text-xs">
+        <div className="flex items-center gap-2 text-slate-600 dark:text-neutral-400 text-xs">
           <div className="flex items-center gap-1 text-[11px]">
             <span>Rows:</span>
             <select
@@ -121,7 +121,7 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
                 setPageSize(Number(e.target.value))
                 setCurrentPage(1)
               }}
-              className="bg-[#161822] border border-neutral-800 rounded px-1.5 py-0.5 text-neutral-300 text-xs focus:outline-none"
+              className="bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded px-1.5 py-0.5 text-slate-800 dark:text-neutral-300 text-xs focus:outline-none"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -131,7 +131,7 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
             </select>
           </div>
 
-          <div className="h-3 w-[1px] bg-neutral-800 mx-1" />
+          <div className="h-3 w-[1px] bg-slate-200 dark:bg-neutral-800 mx-1" />
 
           <span className="text-[11px] font-mono">
             {pageSize === -1
@@ -146,14 +146,14 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1 || pageSize === -1}
-              className="p-1 rounded hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages || pageSize === -1}
-              className="p-1 rounded hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -164,9 +164,9 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
       {/* Main Table Viewport */}
       <div className="flex-1 overflow-auto">
         <table className="w-full text-left border-collapse font-sans text-xs">
-          <thead className="bg-[#12141c] sticky top-0 z-10 select-none border-b border-neutral-800 shadow-sm">
+          <thead className="bg-slate-100 dark:bg-[#12141c] sticky top-0 z-10 select-none border-b border-slate-200 dark:border-neutral-800 shadow-xs">
             <tr>
-              <th className="w-10 px-2.5 py-2 text-center text-neutral-500 font-mono text-[10px] border-r border-neutral-800/60">
+              <th className="w-10 px-2.5 py-2 text-center text-slate-400 dark:text-neutral-500 font-mono text-[10px] border-r border-slate-200 dark:border-neutral-800/60">
                 #
               </th>
               {result.columns.map((col, idx) => {
@@ -175,16 +175,16 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
                   <th
                     key={idx}
                     onClick={() => handleSort(idx)}
-                    className="px-3 py-2 text-neutral-300 font-medium hover:bg-neutral-800/50 cursor-pointer border-r border-neutral-800/60 transition-colors whitespace-nowrap"
+                    className="px-3 py-2 text-slate-700 dark:text-neutral-300 font-medium hover:bg-slate-200/60 dark:hover:bg-neutral-800/50 cursor-pointer border-r border-slate-200 dark:border-neutral-800/60 transition-colors whitespace-nowrap"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-neutral-200">{col}</span>
-                      <span className="text-neutral-500">
+                      <span className="font-mono text-slate-900 dark:text-neutral-200 font-semibold">{col}</span>
+                      <span className="text-slate-400 dark:text-neutral-500">
                         {isSorted ? (
                           sortAsc ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-indigo-400" />
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                           ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-indigo-400" />
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                           )
                         ) : (
                           <ChevronsUpDown className="w-3 h-3 opacity-30" />
@@ -196,12 +196,12 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-800/40">
+          <tbody className="divide-y divide-slate-100 dark:divide-neutral-800/40">
             {paginatedRows.length === 0 ? (
               <tr>
                 <td
                   colSpan={result.columns.length + 1}
-                  className="p-8 text-center text-neutral-500"
+                  className="p-8 text-center text-slate-400 dark:text-neutral-500"
                 >
                   No matching records found
                 </td>
@@ -214,9 +214,9 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
                 return (
                   <tr
                     key={rIdx}
-                    className="hover:bg-neutral-800/40 group/row transition-colors"
+                    className="hover:bg-slate-50 dark:hover:bg-neutral-800/40 group/row transition-colors"
                   >
-                    <td className="px-2.5 py-1.5 text-center text-neutral-500 font-mono text-[10px] border-r border-neutral-800/40 select-none bg-[#0a0b0f]/30">
+                    <td className="px-2.5 py-1.5 text-center text-slate-400 dark:text-neutral-500 font-mono text-[10px] border-r border-slate-200 dark:border-neutral-800/40 select-none bg-slate-50/50 dark:bg-[#0a0b0f]/30">
                       {absoluteIndex}
                     </td>
 
@@ -231,12 +231,12 @@ export const DataTable: React.FC<DataTableProps> = ({ result }) => {
                           key={cIdx}
                           onClick={() => !isNull && copyToClipboard(cellText, rIdx, cIdx)}
                           title={isNull ? 'NULL value' : 'Click to copy cell value'}
-                          className={`px-3 py-1.5 border-r border-neutral-800/40 font-mono truncate max-w-xs cursor-pointer hover:bg-indigo-500/10 transition-colors relative group/cell ${
-                            isNumber ? 'text-right text-cyan-300' : 'text-neutral-200'
+                          className={`px-3 py-1.5 border-r border-slate-200/80 dark:border-neutral-800/40 font-mono truncate max-w-xs cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors relative group/cell ${
+                            isNumber ? 'text-right text-blue-600 dark:text-cyan-300 font-medium' : 'text-slate-800 dark:text-neutral-200'
                           }`}
                         >
                           {isNull ? (
-                            <span className="text-[10px] font-sans italic text-neutral-500 bg-neutral-900 px-1.5 py-0.5 rounded border border-neutral-800/60">
+                            <span className="text-[10px] font-sans italic text-slate-400 dark:text-neutral-500 bg-slate-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-neutral-800/60">
                               NULL
                             </span>
                           ) : (

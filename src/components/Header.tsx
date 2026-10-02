@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react'
 import {
-  Database as DbIcon,
   RotateCcw,
   Upload,
   Download,
@@ -11,11 +10,13 @@ import {
   FileCode,
   Check,
   ChevronDown,
+  Database as DbIcon,
 } from 'lucide-react'
 import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
 import { exportBinaryDb, exportSqlDump, importSqlDump, importBinaryDb } from '../lib/db'
 import { downloadBlob } from '../lib/exportUtils'
+import { PrismLogo } from './PrismLogo'
 
 interface HeaderProps {
   currentDataset: string
@@ -107,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <header className="h-14 border-b border-neutral-800 bg-[#0d0e12] px-4 flex items-center justify-between text-xs select-none z-30 relative">
+    <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] px-4 flex items-center justify-between text-xs select-none z-30 relative transition-colors">
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -126,22 +127,26 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Brand & Status */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 font-semibold text-sm tracking-tight text-white">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-[1px] flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <div className="w-full h-full bg-[#0d0e12] rounded-[7px] flex items-center justify-center">
-              <DbIcon className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-900 dark:text-white">
+          <PrismLogo size={28} />
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1 leading-none">
+              <span>Prism</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400">
+                SQL
+              </span>
             </div>
+            <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 tracking-wider uppercase mt-0.5">
+              Studio
+            </span>
           </div>
-          <span>
-            SQL<span className="text-indigo-400">Playground</span>
-          </span>
         </div>
 
-        <div className="h-4 w-[1px] bg-neutral-800 hidden sm:block" />
+        <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
         {/* Engine status pill */}
-        <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-[11px] text-neutral-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#141724] border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>SQLite 3 (WASM)</span>
         </div>
       </div>
@@ -155,14 +160,14 @@ export const Header: React.FC<HeaderProps> = ({
               setImportMenuOpen(false)
               setExportMenuOpen(false)
             }}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-200 transition-colors"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 transition-colors shadow-sm"
           >
-            <span className="text-neutral-400 text-[11px]">Dataset:</span>
-            <span className="font-medium text-white">{activeDatasetObj.name}</span>
-            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <span className="text-slate-400 text-[11px]">Dataset:</span>
+            <span className="font-semibold text-slate-900 dark:text-white">{activeDatasetObj.name}</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 font-medium">
               {activeDatasetObj.badge}
             </span>
-            <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
 
           {datasetMenuOpen && (
@@ -171,8 +176,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className="fixed inset-0 z-40"
                 onClick={() => setDatasetMenuOpen(false)}
               />
-              <div className="absolute left-0 mt-1.5 w-72 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-1.5 text-[11px] font-medium text-neutral-400 border-b border-neutral-800/80">
+              <div className="absolute left-0 mt-1.5 w-72 rounded-lg bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 text-[11px] font-medium text-slate-400 dark:text-neutral-400 border-b border-slate-100 dark:border-neutral-800/80">
                   Switch Active Database
                 </div>
                 {DATASETS.map((ds) => {
@@ -184,27 +189,29 @@ export const Header: React.FC<HeaderProps> = ({
                         onSelectDataset(ds.id)
                         setDatasetMenuOpen(false)
                       }}
-                      className={`w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-neutral-800/60 transition-colors ${
-                        isSelected ? 'bg-indigo-500/10 text-white' : 'text-neutral-300'
+                      className={`w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-neutral-800/60 transition-colors ${
+                        isSelected
+                          ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-white font-medium'
+                          : 'text-slate-700 dark:text-neutral-300'
                       }`}
                     >
                       <div className="mt-0.5">
                         {isSelected ? (
-                          <Check className="w-4 h-4 text-indigo-400" />
+                          <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-neutral-700" />
+                          <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-neutral-700" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-xs text-neutral-200">
+                          <span className="font-medium text-xs text-slate-900 dark:text-neutral-200">
                             {ds.name}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400">
                             {ds.badge}
                           </span>
                         </div>
-                        <p className="text-[11px] text-neutral-400 line-clamp-1 mt-0.5">
+                        <p className="text-[11px] text-slate-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
                           {ds.description}
                         </p>
                       </div>
@@ -221,9 +228,9 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={handleReset}
           disabled={isResetting}
           title="Reset database to initial dataset"
-          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+          className="p-1.5 rounded-md text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-transparent hover:border-slate-200 dark:hover:border-neutral-800 transition-colors"
         >
-          <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin text-indigo-400' : ''}`} />
+          <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin text-indigo-500' : ''}`} />
         </button>
       </div>
 
@@ -237,11 +244,11 @@ export const Header: React.FC<HeaderProps> = ({
               setExportMenuOpen(false)
               setDatasetMenuOpen(false)
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-sm"
           >
-            <Upload className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="hidden sm:inline">Import</span>
-            <ChevronDown className="w-3 h-3 text-neutral-400" />
+            <Upload className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+            <span className="hidden sm:inline font-medium">Import</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {importMenuOpen && (
@@ -250,38 +257,38 @@ export const Header: React.FC<HeaderProps> = ({
                 className="fixed inset-0 z-40"
                 onClick={() => setImportMenuOpen(false)}
               />
-              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1 z-50">
+              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
                 <button
                   onClick={() => {
                     setImportMenuOpen(false)
                     onOpenCsvModal()
                   }}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   <div>
                     <div className="font-medium">Import CSV</div>
-                    <div className="text-[10px] text-neutral-400">Auto-create table from CSV</div>
+                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Auto-create table from CSV</div>
                   </div>
                 </button>
                 <button
                   onClick={() => sqlFileInputRef.current?.click()}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
                 >
-                  <FileCode className="w-4 h-4 text-cyan-400" />
+                  <FileCode className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <div>
                     <div className="font-medium">Execute .SQL File</div>
-                    <div className="text-[10px] text-neutral-400">Run scripts and DDL</div>
+                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Run scripts and DDL</div>
                   </div>
                 </button>
                 <button
                   onClick={() => dbFileInputRef.current?.click()}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
                 >
-                  <DbIcon className="w-4 h-4 text-indigo-400" />
+                  <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   <div>
                     <div className="font-medium">Load SQLite .db</div>
-                    <div className="text-[10px] text-neutral-400">Open custom SQLite file</div>
+                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Open custom SQLite file</div>
                   </div>
                 </button>
               </div>
@@ -297,11 +304,11 @@ export const Header: React.FC<HeaderProps> = ({
               setImportMenuOpen(false)
               setDatasetMenuOpen(false)
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#141724] hover:bg-slate-200 dark:hover:bg-[#1c2032] border border-slate-200 dark:border-slate-800 transition-colors shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="hidden sm:inline">Export</span>
-            <ChevronDown className="w-3 h-3 text-neutral-400" />
+            <Download className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+            <span className="hidden sm:inline font-medium">Export</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {exportMenuOpen && (
@@ -310,25 +317,25 @@ export const Header: React.FC<HeaderProps> = ({
                 className="fixed inset-0 z-40"
                 onClick={() => setExportMenuOpen(false)}
               />
-              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-[#14161d] border border-neutral-800 shadow-2xl py-1 z-50">
+              <div className="absolute right-0 mt-1.5 w-52 rounded-lg bg-white dark:bg-[#141724] border border-slate-200 dark:border-slate-800 shadow-2xl py-1 z-50">
                 <button
                   onClick={handleExportSqlite}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
                 >
-                  <DbIcon className="w-4 h-4 text-indigo-400" />
+                  <DbIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   <div>
                     <div className="font-medium">SQLite Database (.sqlite)</div>
-                    <div className="text-[10px] text-neutral-400">Binary SQLite file</div>
+                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">Binary SQLite file</div>
                   </div>
                 </button>
                 <button
                   onClick={handleExportDump}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-neutral-800/80 text-neutral-200"
+                  className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-neutral-800/80 text-slate-800 dark:text-neutral-200"
                 >
-                  <FileCode className="w-4 h-4 text-amber-400" />
+                  <FileCode className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <div>
                     <div className="font-medium">SQL Dump Script (.sql)</div>
-                    <div className="text-[10px] text-neutral-400">DDL & INSERT statements</div>
+                    <div className="text-[10px] text-slate-500 dark:text-neutral-400">DDL & INSERT statements</div>
                   </div>
                 </button>
               </div>
@@ -340,7 +347,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenShortcutsModal}
           title="Keyboard shortcuts"
-          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+          className="p-1.5 rounded-md text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-transparent hover:border-slate-200 dark:hover:border-neutral-800 transition-colors"
         >
           <Keyboard className="w-4 h-4" />
         </button>
@@ -349,9 +356,9 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme'}
-          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border border-transparent hover:border-neutral-800 transition-colors"
+          className="p-1.5 rounded-md text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-transparent hover:border-slate-200 dark:hover:border-neutral-800 transition-colors"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
         </button>
       </div>
     </header>

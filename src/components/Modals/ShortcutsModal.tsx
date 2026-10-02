@@ -46,17 +46,17 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-lg bg-[#14161f] border border-neutral-800 rounded-xl shadow-2xl flex flex-col overflow-hidden text-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="w-full max-w-lg bg-white dark:bg-[#14161f] border border-slate-200 dark:border-neutral-800 rounded-xl shadow-2xl flex flex-col overflow-hidden text-xs">
         {/* Header */}
-        <div className="h-12 px-4 border-b border-neutral-800 flex items-center justify-between bg-[#0e1017]">
-          <div className="flex items-center gap-2 font-semibold text-sm text-white">
-            <Keyboard className="w-4 h-4 text-indigo-400" />
+        <div className="h-12 px-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between bg-slate-50 dark:bg-[#0e1017]">
+          <div className="flex items-center gap-2 font-semibold text-sm text-slate-900 dark:text-white">
+            <Keyboard className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>Keyboard Shortcuts</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -67,18 +67,18 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
           {shortcuts.map((sc, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-2 rounded-lg bg-[#0e1017] border border-neutral-800/80"
+              className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-[#0e1017] border border-slate-200 dark:border-neutral-800/80"
             >
               <div>
-                <div className="font-medium text-neutral-200">{sc.action}</div>
-                <div className="text-[11px] text-neutral-500 mt-0.5">{sc.description}</div>
+                <div className="font-semibold text-slate-800 dark:text-neutral-200">{sc.action}</div>
+                <div className="text-[11px] text-slate-500 dark:text-neutral-500 mt-0.5">{sc.description}</div>
               </div>
 
               <div className="flex items-center gap-1">
                 {sc.keys.map((k, kIdx) => (
                   <kbd
                     key={kIdx}
-                    className="px-2 py-1 rounded bg-[#1c1f2b] border border-neutral-700 text-neutral-200 font-mono text-[11px] shadow-sm"
+                    className="px-2 py-1 rounded bg-white dark:bg-[#1c1f2b] border border-slate-300 dark:border-neutral-700 text-slate-800 dark:text-neutral-200 font-mono text-[11px] shadow-xs font-semibold"
                   >
                     {k}
                   </kbd>
@@ -89,10 +89,10 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer */}
-        <div className="h-11 px-4 border-t border-neutral-800 flex items-center justify-end bg-[#0e1017]">
+        <div className="h-11 px-4 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-end bg-slate-50 dark:bg-[#0e1017]">
           <button
             onClick={onClose}
-            className="px-3.5 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium transition-colors"
+            className="px-3.5 py-1 rounded-md bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 text-slate-800 dark:text-neutral-200 font-semibold transition-colors"
           >
             Got it
           </button>

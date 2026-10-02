@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react'
 import CodeMirror, { Prec } from '@uiw/react-codemirror'
 import { sql, SQLite } from '@codemirror/lang-sql'
-import { oneDark } from '@codemirror/theme-one-dark'
 import { keymap } from '@codemirror/view'
 import type { TableSchema } from '../../types/sql'
 import { useTheme } from '../../context/ThemeContext'
+import { getEditorThemeExtensions } from './editorThemes'
 
 interface SqlEditorProps {
   value: string
@@ -22,6 +22,7 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
   schemas,
 }) => {
   const { theme } = useTheme()
+  const isDark = theme === 'dark'
 
   // Generate schema map for autocomplete
   const schemaMap = useMemo(() => {
@@ -54,6 +55,10 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
     )
   }, [onRunQuery, onFormatSql])
 
+  const themeExtensions = useMemo(() => {
+    return getEditorThemeExtensions(isDark)
+  }, [isDark])
+
   const extensions = useMemo(() => {
     return [
       sql({
@@ -62,15 +67,16 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
         upperCaseKeywords: true,
       }),
       customKeymaps,
+      ...themeExtensions,
     ]
-  }, [schemaMap, customKeymaps])
+  }, [schemaMap, customKeymaps, themeExtensions])
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-[#14161f] text-neutral-100 flex flex-col">
+    <div className="w-full h-full relative overflow-hidden bg-white dark:bg-[#0c0e14] text-slate-900 dark:text-slate-100 flex flex-col">
       <CodeMirror
         value={value}
         height="100%"
-        theme={theme === 'dark' ? oneDark : 'light'}
+        theme="none"
         extensions={extensions}
         onChange={(val) => onChange(val)}
         basicSetup={{
@@ -83,7 +89,7 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
           dropCursor: true,
           allowMultipleSelections: true,
           indentOnInput: true,
-          syntaxHighlighting: true,
+          syntaxHighlighting: false, // handled by our custom themeExtensions
           bracketMatching: true,
           closeBrackets: true,
           autocompletion: true,

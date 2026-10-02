@@ -24,9 +24,10 @@ import { TableDetailsModal } from './components/Modals/TableDetailsModal'
 import { SaveQueryModal } from './components/Modals/SaveQueryModal'
 import { ShortcutsModal } from './components/Modals/ShortcutsModal'
 import { ThemeProvider } from './context/ThemeContext'
-import { Database, Loader2, AlertCircle } from 'lucide-react'
+import { PrismLogo } from './components/PrismLogo'
+import { Loader2, AlertCircle } from 'lucide-react'
 
-const DEFAULT_QUERY = `-- Welcome to SQL Playground!
+const DEFAULT_QUERY = `-- Welcome to PrismSQL Studio!
 -- Select a sample query from the Library or write your own.
 -- Press Ctrl+Enter (Cmd+Enter) to run.
 
@@ -363,19 +364,15 @@ ORDER BY average_salary DESC;`
 
   if (isInitializing) {
     return (
-      <div className="h-screen w-screen bg-[#090a0f] text-neutral-200 flex flex-col items-center justify-center select-none font-sans">
+      <div className="h-screen w-screen bg-slate-50 dark:bg-[#090a0f] text-slate-800 dark:text-neutral-200 flex flex-col items-center justify-center select-none font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-[1px] shadow-xl shadow-indigo-500/20">
-            <div className="w-full h-full bg-[#0d0e12] rounded-[11px] flex items-center justify-center">
-              <Database className="w-6 h-6 text-indigo-400" />
-            </div>
+          <PrismLogo size={48} className="animate-pulse" />
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white mt-1">
+            <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
+            <span>Initializing PrismSQL Engine...</span>
           </div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-            <span>Loading SQLite WASM Engine...</span>
-          </div>
-          <p className="text-xs text-neutral-500 font-mono">
-            Bootstrapping in-memory database & sample schemas
+          <p className="text-xs text-slate-500 font-mono">
+            Bootstrapping in-memory SQLite WASM & sample databases
           </p>
         </div>
       </div>
@@ -384,14 +381,14 @@ ORDER BY average_salary DESC;`
 
   if (initError) {
     return (
-      <div className="h-screen w-screen bg-[#090a0f] text-neutral-200 flex flex-col items-center justify-center select-none p-6 font-sans">
-        <div className="max-w-md w-full p-6 rounded-xl bg-rose-950/20 border border-rose-500/30 text-rose-300 text-center">
-          <AlertCircle className="w-8 h-8 mx-auto text-rose-400 mb-2" />
-          <h2 className="text-sm font-bold text-white mb-1">Initialization Failed</h2>
-          <p className="text-xs text-rose-200/90 mb-4">{initError}</p>
+      <div className="h-screen w-screen bg-slate-50 dark:bg-[#090a0f] text-slate-900 dark:text-neutral-200 flex flex-col items-center justify-center select-none p-6 font-sans">
+        <div className="max-w-md w-full p-6 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 text-center shadow-lg">
+          <AlertCircle className="w-8 h-8 mx-auto text-rose-500 mb-2" />
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Initialization Failed</h2>
+          <p className="text-xs text-rose-700 dark:text-rose-200/90 mb-4">{initError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm"
           >
             Retry
           </button>
@@ -401,7 +398,7 @@ ORDER BY average_salary DESC;`
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0d0e12] text-neutral-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 dark:bg-[#090a0f] text-slate-900 dark:text-neutral-100 font-sans">
       {/* Top Header */}
       <Header
         currentDataset={currentDataset}
@@ -413,7 +410,7 @@ ORDER BY average_salary DESC;`
       />
 
       {/* Main Workspace Body */}
-      <div className="flex flex-1 min-h-0 relative">
+      <div className="flex flex-1 min-h-0 relative overflow-hidden">
         {/* Left Sidebar */}
         <Sidebar
           schemas={schemas}
@@ -436,13 +433,13 @@ ORDER BY average_salary DESC;`
         {/* Center / Right: Editor & Results Split Pane */}
         <div
           id="editor-results-container"
-          className="flex-1 flex flex-col min-w-0 h-full relative"
+          className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden"
         >
           {/* Top Panel: Editor (hidden if results maximized) */}
           {!isMaximized && (
             <div
               style={{ height: `${editorHeightPercent}%` }}
-              className="flex flex-col min-h-[140px] relative border-b border-neutral-800"
+              className="flex flex-col min-h-[140px] relative border-b border-slate-200 dark:border-slate-800 overflow-hidden"
             >
               <EditorToolbar
                 tabs={tabs}
@@ -457,7 +454,7 @@ ORDER BY average_salary DESC;`
                 onSaveQuery={() => setSaveModalOpen(true)}
                 isRunning={isRunning}
               />
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <SqlEditor
                   value={activeTab.query}
                   onChange={updateActiveQuery}
@@ -473,9 +470,9 @@ ORDER BY average_salary DESC;`
           {!isMaximized && (
             <div
               onMouseDown={handleMouseDownSplitter}
-              className="h-1 bg-neutral-800/80 hover:bg-indigo-500 cursor-row-resize transition-colors z-10 shrink-0 select-none flex items-center justify-center group"
+              className="h-1.5 bg-slate-200 dark:bg-neutral-800/80 hover:bg-indigo-500 dark:hover:bg-indigo-500 cursor-row-resize transition-colors z-10 shrink-0 select-none flex items-center justify-center group"
             >
-              <div className="w-8 h-0.5 rounded-full bg-neutral-600 group-hover:bg-white" />
+              <div className="w-8 h-0.5 rounded-full bg-slate-400 dark:bg-neutral-600 group-hover:bg-white" />
             </div>
           )}
 
@@ -484,7 +481,7 @@ ORDER BY average_salary DESC;`
             style={{
               height: isMaximized ? '100%' : `${100 - editorHeightPercent}%`,
             }}
-            className="flex-1 flex flex-col min-h-[140px] relative"
+            className="flex-1 flex flex-col min-h-[140px] relative overflow-hidden"
           >
             <ResultsContainer
               result={result}

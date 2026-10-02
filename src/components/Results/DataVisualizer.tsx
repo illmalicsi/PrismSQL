@@ -58,6 +58,7 @@ const BORDER_PALETTE = [
 
 export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
   const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const [chartType, setChartType] = useState<ChartType>('bar')
 
   // Find suitable numeric and categorical columns
@@ -70,7 +71,6 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
     const lCols: string[] = []
 
     result.columns.forEach((col, idx) => {
-      // Check first few rows
       let isNumber = true
       let hasData = false
 
@@ -121,7 +121,7 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
 
     if (labelIdx === -1 || valueIdx === -1) return null
 
-    // Slice to top 40 items so chart remains clean and sharp
+    // Slice to top 40 items
     const rows = result.values.slice(0, 40)
     const labels = rows.map((r) => String(r[labelIdx] ?? 'NULL'))
     const dataValues = rows.map((r) => {
@@ -151,9 +151,8 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
   }, [result, labelCol, valueCol, chartType])
 
   const chartOptions = useMemo(() => {
-    const isDark = theme === 'dark'
-    const textColor = isDark ? '#94a3b8' : '#475569'
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+    const textColor = isDark ? '#94a3b8' : '#64748b'
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)'
 
     return {
       responsive: true,
@@ -168,10 +167,10 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
           },
         },
         tooltip: {
-          backgroundColor: isDark ? '#1e2230' : '#ffffff',
+          backgroundColor: isDark ? '#141724' : '#ffffff',
           titleColor: isDark ? '#f8fafc' : '#0f172a',
           bodyColor: isDark ? '#cbd5e1' : '#334155',
-          borderColor: isDark ? '#334155' : '#e2e8f0',
+          borderColor: isDark ? '#2e344a' : '#e2e8f0',
           borderWidth: 1,
           padding: 8,
           boxPadding: 4,
@@ -191,26 +190,26 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
               },
             },
     }
-  }, [theme, chartType])
+  }, [isDark, chartType])
 
   if (!result.values.length) {
     return (
-      <div className="h-full flex items-center justify-center text-neutral-500 text-xs">
+      <div className="h-full flex items-center justify-center text-slate-400 dark:text-neutral-500 text-xs">
         Execute a query to visualize data
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0e12] select-none text-xs">
+    <div className="flex flex-col h-full bg-white dark:bg-[#0d0e12] select-none text-xs">
       {/* Controls Bar */}
-      <div className="h-10 px-4 border-b border-neutral-800 bg-[#101217] flex items-center justify-between gap-4">
+      <div className="h-10 px-4 border-b border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-[#101217] flex items-center justify-between gap-4 shrink-0">
         {/* Chart Type Selector */}
-        <div className="flex items-center gap-1 bg-[#161822] p-0.5 rounded-md border border-neutral-800">
+        <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-[#161822] p-0.5 rounded-md border border-slate-200 dark:border-neutral-800">
           <button
             onClick={() => setChartType('bar')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              chartType === 'bar' ? 'bg-indigo-600 text-white font-medium' : 'text-neutral-400 hover:text-neutral-200'
+              chartType === 'bar' ? 'bg-indigo-600 text-white font-medium shadow-xs' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
@@ -219,7 +218,7 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
           <button
             onClick={() => setChartType('line')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              chartType === 'line' ? 'bg-indigo-600 text-white font-medium' : 'text-neutral-400 hover:text-neutral-200'
+              chartType === 'line' ? 'bg-indigo-600 text-white font-medium shadow-xs' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <LineChart className="w-3.5 h-3.5" />
@@ -228,7 +227,7 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
           <button
             onClick={() => setChartType('doughnut')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              chartType === 'doughnut' ? 'bg-indigo-600 text-white font-medium' : 'text-neutral-400 hover:text-neutral-200'
+              chartType === 'doughnut' ? 'bg-indigo-600 text-white font-medium shadow-xs' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <PieChart className="w-3.5 h-3.5" />
@@ -237,7 +236,7 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
           <button
             onClick={() => setChartType('pie')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs transition-colors ${
-              chartType === 'pie' ? 'bg-indigo-600 text-white font-medium' : 'text-neutral-400 hover:text-neutral-200'
+              chartType === 'pie' ? 'bg-indigo-600 text-white font-medium shadow-xs' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200'
             }`}
           >
             <PieChart className="w-3.5 h-3.5" />
@@ -248,11 +247,11 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
         {/* Axis Column Selectors */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-neutral-400 text-[11px]">X-Axis (Label):</span>
+            <span className="text-slate-500 dark:text-neutral-400 text-[11px]">X-Axis (Label):</span>
             <select
               value={labelCol}
               onChange={(e) => setLabelCol(e.target.value)}
-              className="bg-[#161822] border border-neutral-800 rounded px-2 py-0.5 text-neutral-200 font-mono text-xs focus:outline-none"
+              className="bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded px-2 py-0.5 text-slate-800 dark:text-neutral-200 font-mono text-xs focus:outline-none"
             >
               {result.columns.map((c) => (
                 <option key={c} value={c}>
@@ -263,11 +262,11 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-neutral-400 text-[11px]">Y-Axis (Value):</span>
+            <span className="text-slate-500 dark:text-neutral-400 text-[11px]">Y-Axis (Value):</span>
             <select
               value={valueCol}
               onChange={(e) => setValueCol(e.target.value)}
-              className="bg-[#161822] border border-neutral-800 rounded px-2 py-0.5 text-neutral-200 font-mono text-xs focus:outline-none"
+              className="bg-white dark:bg-[#161822] border border-slate-200 dark:border-neutral-800 rounded px-2 py-0.5 text-slate-800 dark:text-neutral-200 font-mono text-xs focus:outline-none"
             >
               {result.columns.map((c) => (
                 <option key={c} value={c}>
@@ -280,7 +279,7 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
       </div>
 
       {/* Canvas Container */}
-      <div className="flex-1 p-6 relative min-h-0">
+      <div className="flex-1 p-6 relative min-h-0 bg-white dark:bg-[#0c0e14]">
         {chartData ? (
           <div className="w-full h-full">
             {chartType === 'bar' && <Bar data={chartData} options={chartOptions} />}
@@ -289,15 +288,15 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ result }) => {
             {chartType === 'pie' && <Pie data={chartData} options={chartOptions} />}
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center text-neutral-500">
+          <div className="h-full flex items-center justify-center text-slate-400 dark:text-neutral-500">
             No valid data points for selected axes
           </div>
         )}
       </div>
 
       {result.values.length > 40 && (
-        <div className="py-1 px-4 bg-[#101217] border-t border-neutral-800/80 text-[11px] text-neutral-500 flex items-center gap-1">
-          <Info className="w-3 h-3 text-neutral-400" />
+        <div className="py-1 px-4 bg-slate-50 dark:bg-[#101217] border-t border-slate-200 dark:border-neutral-800/80 text-[11px] text-slate-500 dark:text-neutral-500 flex items-center gap-1">
+          <Info className="w-3 h-3 text-slate-400" />
           <span>Chart displays first 40 rows for optimal readability.</span>
         </div>
       )}
