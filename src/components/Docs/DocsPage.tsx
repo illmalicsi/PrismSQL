@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { SQL_DOCUMENTATION, DOC_CATEGORIES } from '../../data/sqlDocs'
 import { useTheme } from '../../context/ThemeContext'
-import { PrismLogo } from '../PrismLogo'
+import { PrismLogo, PrismBrandText } from '../PrismLogo'
 
 interface DocsPageProps {
   onBackToStudio?: () => void
@@ -102,10 +102,8 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBackToStudio, onSelectQuer
 
           <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-2 sm:pl-3 min-w-0">
             <PrismLogo size={22} className="shrink-0" />
-            <div className="truncate">
-              <span className="font-bold text-sm tracking-tight bg-gradient-to-r from-indigo-500 to-cyan-500 bg-clip-text text-transparent">
-                PrismSQL
-              </span>
+            <div className="truncate flex items-center">
+              <PrismBrandText className="text-sm sm:text-base font-bold shrink-0" />
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1.5 hidden md:inline">
                 Docs & Query Reference
               </span>

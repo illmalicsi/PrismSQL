@@ -84,3 +84,59 @@ export const PrismLogo: React.FC<PrismLogoProps> = ({ size = 28, className = '' 
     </div>
   )
 }
+
+export interface PrismBrandTextProps {
+  className?: string
+  style?: React.CSSProperties
+}
+
+/**
+ * Renders the official "PrismSQL" brand name with the signature optical prism spectrum gradient
+ * from Rose (#f03b6e) -> Magenta (#d15494) -> Orchid (#a462c5) -> Violet (#635fff) -> Royal Blue (#3c92ee) -> Cyan (#00b4d8).
+ */
+export const PrismBrandText: React.FC<PrismBrandTextProps> = ({ className = '', style }) => {
+  return (
+    <span
+      className={`font-bold tracking-tight bg-clip-text text-transparent select-none inline-block ${className}`}
+      style={{
+        backgroundImage:
+          'linear-gradient(90deg, #f03b6e 0%, #d15494 22%, #a462c5 44%, #635fff 65%, #3c92ee 85%, #00b4d8 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        ...style,
+      }}
+    >
+      PrismSQL
+    </span>
+  )
+}
+
+export interface PrismBrandProps {
+  logoSize?: number
+  textSize?: string
+  subtitle?: string
+  showSubtitle?: boolean
+  className?: string
+}
+
+export const PrismBrand: React.FC<PrismBrandProps> = ({
+  logoSize = 26,
+  textSize = 'text-sm sm:text-base',
+  subtitle,
+  showSubtitle = false,
+  className = '',
+}) => {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <PrismLogo size={logoSize} />
+      <div className="flex flex-col leading-none">
+        <PrismBrandText className={textSize} />
+        {showSubtitle && subtitle && (
+          <span className="hidden sm:block text-[9px] font-medium text-slate-400 dark:text-slate-500 tracking-wider uppercase mt-0.5">
+            {subtitle}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}

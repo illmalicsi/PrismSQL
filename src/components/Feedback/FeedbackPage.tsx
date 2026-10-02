@@ -22,7 +22,7 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
-import { PrismLogo } from '../PrismLogo'
+import { PrismLogo, PrismBrandText } from '../PrismLogo'
 
 export interface BugReport {
   id: string
@@ -310,10 +310,8 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
 
           <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-3">
             <PrismLogo size={24} />
-            <div>
-              <span className="font-bold text-sm tracking-tight bg-gradient-to-r from-rose-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
-                PrismSQL
-              </span>
+            <div className="flex items-center">
+              <PrismBrandText className="text-sm sm:text-base font-bold shrink-0" />
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1.5 hidden sm:inline">
                 Bug & Feedback Center
               </span>

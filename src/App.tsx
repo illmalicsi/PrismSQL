@@ -35,7 +35,7 @@ import { BuyMeCoffeeModal } from './components/Modals/BuyMeCoffeeModal'
 import { DocsPage } from './components/Docs/DocsPage'
 import { FeedbackPage } from './components/Feedback/FeedbackPage'
 import { ThemeProvider } from './context/ThemeContext'
-import { PrismLogo } from './components/PrismLogo'
+import { PrismLogo, PrismBrandText } from './components/PrismLogo'
 import { Loader2, AlertCircle, Coffee, Code2, Table2, Columns } from 'lucide-react'
 
 const DEFAULT_QUERY = ''
@@ -615,7 +615,11 @@ ORDER BY average_salary DESC;`
           <PrismLogo size={48} className="animate-pulse" />
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white mt-1">
             <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
-            <span>Initializing PrismSQL Engine...</span>
+            <span className="flex items-center gap-1.5">
+              <span>Initializing</span>
+              <PrismBrandText className="text-sm font-bold" />
+              <span>Engine...</span>
+            </span>
           </div>
           <p className="text-xs text-slate-500 font-mono">
             Bootstrapping in-memory SQLite WASM & sample databases

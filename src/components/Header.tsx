@@ -23,7 +23,7 @@ import { DATASETS } from '../data/datasets'
 import { useTheme } from '../context/ThemeContext'
 import { exportBinaryDb, exportSqlDump, importSqlDump, importBinaryDb } from '../lib/db'
 import { downloadBlob } from '../lib/exportUtils'
-import { PrismLogo } from './PrismLogo'
+import { PrismLogo, PrismBrandText } from './PrismLogo'
 import type { CustomDatabase } from '../types/sql'
 
 interface HeaderProps {
@@ -186,14 +186,11 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        <div className="flex items-center gap-2 font-bold text-sm tracking-tight text-slate-900 dark:text-white">
+        <div className="flex items-center gap-2">
           <PrismLogo size={26} />
           <div className="flex flex-col">
-            <div className="flex items-center gap-1 leading-none">
-              <span>Prism</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400">
-                SQL
-              </span>
+            <div className="flex items-center leading-none">
+              <PrismBrandText className="text-base" />
             </div>
             <span className="hidden sm:block text-[9px] font-medium text-slate-400 dark:text-slate-500 tracking-wider uppercase mt-0.5">
               Studio
