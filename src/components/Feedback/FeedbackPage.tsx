@@ -96,6 +96,22 @@ export function buildGitHubIssueUrl(report: {
   return `${repoUrl}/issues/new?title=${encodeURIComponent(issueTitle)}&labels=${encodeURIComponent(labels)}&body=${encodeURIComponent(issueBody)}`
 }
 
+export function getSubmissionHeading(type: BugReport['type']) {
+  switch (type) {
+    case 'feature':
+      return 'Feature Request Submitted!'
+    case 'performance':
+      return 'Performance Report Submitted!'
+    case 'sql':
+      return 'SQL Issue Submitted!'
+    case 'ui':
+      return 'UI Glitch Reported!'
+    case 'bug':
+    default:
+      return 'Bug Report Submitted!'
+  }
+}
+
 interface FeedbackPageProps {
   onBackToStudio?: () => void
 }
@@ -213,7 +229,7 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          _subject: `[PrismSQL Feedback] [${newReport.ticketId}] [${newReport.type.toUpperCase()}] ${newReport.title}`,
+          _subject: `[PrismSQL Feedback] [${createdGithubIssueNumber ? `Issue #${createdGithubIssueNumber}` : newReport.ticketId}] [${newReport.type.toUpperCase()}] ${newReport.title}`,
           app: 'PrismSQL (https://prismsql.vercel.app/)',
           ticketId: newReport.ticketId,
           type: newReport.type,
@@ -256,8 +272,9 @@ export const FeedbackPage: React.FC<FeedbackPageProps> = ({ onBackToStudio }) =>
   }
 
   const handleCopyTicketDetails = (report: BugReport) => {
-    const text = `### ${report.ticketId}: ${report.title}
-- **Type**: ${report.type}
+    const idLabel = report.githubIssueNumber ? `Issue #${report.githubIssueNumber}` : report.ticketId
+    const text = `### ${idLabel}: ${report.title}
+${report.githubIssueUrl ? `- **GitHub Issue**: ${report.githubIssueUrl}\n` : ''}- **Type**: ${report.type}
 - **Severity**: ${report.severity}
 - **Date**: ${new Date(report.timestamp).toLocaleString()}
 - **Contact**: ${report.email || 'Anonymous'}
@@ -359,13 +376,20 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
 
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
-                Ticket #{submittedTicket.ticketId}
+                {submittedTicket.githubIssueNumber ? (
+                  <>
+                    <GithubIcon className="w-3.5 h-3.5" />
+                    <span>Issue #{submittedTicket.githubIssueNumber}</span>
+                  </>
+                ) : (
+                  <span>Ticket #{submittedTicket.ticketId}</span>
+                )}
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                Bug Report Submitted!
+                {getSubmissionHeading(submittedTicket.type)}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Thank you! Your report has been dispatched directly to the developer. No email client or Gmail was required.
+                Thank you! Your {submittedTicket.type === 'feature' ? 'request' : 'report'} has been dispatched directly to the developer. No email client or Gmail was required.
               </p>
             </div>
 
@@ -438,20 +462,6 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                 <span className="text-slate-500 dark:text-slate-400 font-sans">Severity:</span>
                 <span className="capitalize text-slate-800 dark:text-slate-200">{submittedTicket.severity}</span>
               </div>
-              {submittedTicket.githubIssueUrl && (
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="text-slate-500 dark:text-slate-400 font-sans">GitHub Issue:</span>
-                  <a
-                    href={submittedTicket.githubIssueUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>#{submittedTicket.githubIssueNumber}</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400 font-sans">Status:</span>
                 <span className="text-emerald-500 font-semibold flex items-center gap-1">
@@ -474,7 +484,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Copy Ticket Summary</span>
+                    <span>Copy Summary</span>
                   </>
                 )}
               </button>
@@ -485,18 +495,6 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
               >
                 Submit Another Report
               </button>
-            </div>
-
-            <div className="pt-2 text-[11px] text-slate-400">
-              Optional: You can also track and browse all issues on{' '}
-              <a
-                href="https://github.com/illmalicsi/PrismSQL/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-500 hover:underline inline-flex items-center gap-0.5"
-              >
-                GitHub Issues <ExternalLink className="w-2.5 h-2.5" />
-              </a>
             </div>
           </div>
         ) : (
@@ -822,7 +820,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                       >
                         <div className="flex items-center justify-between gap-1">
                           <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                            #{rep.ticketId}
+                            {rep.githubIssueNumber ? `Issue #${rep.githubIssueNumber}` : `#${rep.ticketId}`}
                           </span>
                           <span className="text-[10px] text-slate-400">
                             {new Date(rep.timestamp).toLocaleDateString()}
@@ -841,7 +839,7 @@ ${report.sqlOrError ? `**SQL / Error Details**:\n\`\`\`sql\n${report.sqlOrError}
                                 rel="noopener noreferrer"
                                 className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline inline-flex items-center gap-0.5"
                               >
-                                <span>Issue #{rep.githubIssueNumber || 'GH'}</span>
+                                <span>GitHub</span>
                                 <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             ) : (
